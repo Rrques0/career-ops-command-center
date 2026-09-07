@@ -1,0 +1,108 @@
+import { expect, test } from '@playwright/test';
+
+test.beforeEach(async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Archis Khanal', exact: true })).toBeVisible();
+});
+
+test('real engine telemetry, all modules, and Shadow DOM isolation', async ({ page, request }) => {
+  const data = await (await request.get('/api/snapshot')).json();
+  await expect(page.locator('.metric').first()).toContainText(data.scan.checked.toLocaleString());
+  await expect(page.locator('tbody tr')).toHaveCount(Math.min(8, data.funnel.Discovered));
+  for (const name of ['Applications', 'Skills & credentials', 'Sources', 'Activity', 'My documents', 'Guide']) {
+    await page.getByRole('navigation').getByRole('button', { name, exact: true }).click();
+    await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
+  }
+  expect(await page.evaluate(() => !!document.getElementById('career-hub-root')?.shadowRoot)).toBe(true);
+});
+
+test('application search, drawer, persistent transitions and contact notes', async ({ page, request }) => {
+  const data = await (await request.get('/api/snapshot')).json();
+  const job = data.jobs.find((j: { trackerNumber: string; stage: string }) => !j.trackerNumber && j.stage === 'Discovered');
+  expect(job).toBeTruthy();
+  await page.getByRole('navigation').getByRole('button', { name: 'Applications', exact: true }).click();
+  await page.getByLabel('Search applications').fill(job.role);
+  const card = page.locator('.job-card').filter({ hasText: job.company }).filter({ hasText: job.role }).first();
+  await card.getByRole('button').first().click();
+  const drawer = page.getByRole('dialog');
+  await expect(drawer).toBeVisible();
+  await drawer.getByLabel('Application stage', { exact: true }).selectOption('Archived');
+  await expect(drawer.getByLabel('Application stage', { exact: true })).toHaveValue('Archived');
+  await drawer.getByLabel('Actual contact name').fill('TEST RECORD — local test database');
+  await drawer.getByLabel('Conversation or referral note').fill('<script>window.bad = true</script>');
+  await drawer.getByRole('button', { name: 'Save contact note' }).click();
+  await expect(drawer.getByText('Contact note saved.', { exact: true })).toBeVisible();
+  await page.reload();
+  const fresh = await (await request.get('/api/snapshot')).json();
+  const saved = fresh.jobs.find((j: { id: string }) => j.id === job.id);
+  expect(saved.stage).toBe('Archived');
+  expect(saved.events.some((e: { kind: string }) => e.kind === 'contact')).toBe(true);
+  expect(await page.evaluate(() => Object.prototype.hasOwnProperty.call(window, 'bad'))).toBe(false);
+  // Restore the fixture stage in the isolated browser-test database.
+  await request.post('/api/stage', { headers: { 'X-Career-Ops': 'local' }, data: { jobId: job.id, stage: 'Discovered' } });
+});
+
+test('offline state is clear and recovers without placeholders', async ({ page }) => {
+  await page.route('**/api/snapshot', route => route.fulfill({ status: 503, body: '{}' }));
+  await expect(page.getByRole('alert')).toContainText('engine is unavailable', { timeout: 10000 });
+  await expect(page.getByRole('heading', { name: 'Archis Khanal', exact: true })).toBeVisible();
+  await page.unroute('**/api/snapshot');
+  await page.getByRole('button', { name: 'Retry connection' }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('phone layout has no page-level horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('captures command console for visual inspection', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 1100 });
+  await page.screenshot({ path: 'test-results/command-center.png', fullPage: true });
+});
+
+test('LinkedIn project draft is editable and stays draft-only', async ({ page }) => {
+  await page.getByRole('button', { name: 'Draft a LinkedIn project post' }).click();
+  const dialog = page.getByRole('dialog', { name: 'LinkedIn draft' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel('LinkedIn post draft').fill('My reviewed project draft');
+  await expect(dialog.getByLabel('LinkedIn post draft')).toHaveValue('My reviewed project draft');
+  await expect(dialog.getByRole('link', { name: 'Open LinkedIn' })).toHaveAttribute('href', 'https://www.linkedin.com/feed/');
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+});
+
+test('quick navigation, history, saved filters and focus mode', async ({ page }) => {
+  await page.getByRole('button', { name: 'Focus mode · hide scene' }).click();
+  await expect(page.locator('.glacial-hero')).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('.glacial-hero')).toHaveCount(0);
+  await page.keyboard.press('Control+k');
+  const quick = page.getByRole('dialog', { name: 'Quick navigation' });
+  await expect(quick).toBeVisible();
+  await quick.getByLabel('Search pages or opportunities').fill('Applications');
+  await quick.getByRole('button', { name: 'Applications Open page' }).click();
+  await expect(page).toHaveURL(/#Applications$/);
+  await page.getByLabel('Search applications').fill('security');
+  await page.getByRole('button', { name: 'Board', exact: true }).click();
+  await page.reload();
+  await expect(page.getByLabel('Search applications')).toHaveValue('security');
+  await expect(page.getByRole('button', { name: 'Board', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Reset filters' }).click();
+  await page.getByRole('button', { name: /^Ready to review/ }).click();
+  await expect(page.getByLabel('Stage', { exact: true })).toHaveValue('Evaluated');
+  await page.getByRole('navigation').getByRole('button', { name: 'Sources', exact: true }).click();
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: 'Applications', exact: true })).toBeVisible();
+});
+
+test('funnel opens the matching stage and mobile list remains usable', async ({ page }) => {
+  await page.locator('.funnel').getByRole('button', { name: /Evaluated/ }).click();
+  await expect(page.getByLabel('Stage', { exact: true })).toHaveValue('Evaluated');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'List', exact: true }).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: 'test-results/mobile-applications.png', fullPage: true });
+});

@@ -1,0 +1,26 @@
+{
+  "name": "my-career-hub",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build && node scripts/check-bundle.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --pretty false",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "@types/node": "^26.4.1",
+    "@types/react": "latest",
+    "@types/react-dom": "latest"
+  }
+}
