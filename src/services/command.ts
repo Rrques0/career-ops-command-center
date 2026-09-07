@@ -19,6 +19,7 @@ export interface Snapshot {
   scan: { checked: number; added: number; filtered: number; duplicates: number; status: string; timestamp: string };
   scanHistory: { timestamp: string; found: string; new_added: string }[];
   funnel: Record<Stage, number>; scholarships: string; tasks: Task[];
+  githubProfile?: string; projects: { name: string; kind: string; url: string; description: string; language: string; fork: boolean; updatedAt: string }[];
   syncPending: { id: string; error: string }[];
 }
 export async function snapshot(): Promise<Snapshot> {

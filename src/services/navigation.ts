@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export const views = ['Command', 'Applications', 'Skills & credentials', 'Sources', 'Activity', 'My documents', 'Guide'] as const;
+export const views = ['Command', 'Applications', 'Projects', 'Skills & credentials', 'Sources', 'Activity', 'My documents', 'Guide'] as const;
 export type View = typeof views[number];
 export function useNavigation() {
   const read = (): View => {

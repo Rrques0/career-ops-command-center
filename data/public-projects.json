@@ -1,0 +1,14 @@
+{
+  "githubProfile": "https://github.com/Rrques0",
+  "refreshedAt": "2026-09-07T21:21:02Z",
+  "projects": [
+    {"name":"career-ops-command-center","kind":"GitHub repository","url":"https://github.com/Rrques0/career-ops-command-center","description":"Local-first career operations: React/TypeScript UI, Python intelligence bridge, SQLite audit history, and human-controlled application workflows.","language":"Python","fork":false,"updatedAt":"2026-09-07T21:21:02Z"},
+    {"name":"Itenarary","kind":"GitHub repository","url":"https://github.com/Rrques0/Itenarary","description":"Itinerary planning project.","language":"HTML","fork":false,"updatedAt":"2026-07-12T03:25:25Z"},
+    {"name":"Sergio","kind":"GitHub repository","url":"https://github.com/Rrques0/Sergio","description":"TypeScript project.","language":"TypeScript","fork":false,"updatedAt":"2026-05-12T22:01:56Z"},
+    {"name":"Schedule","kind":"GitHub repository","url":"https://github.com/Rrques0/Schedule","description":"Scheduling project.","language":"HTML","fork":false,"updatedAt":"2026-04-25T03:45:48Z"},
+    {"name":"nepal-ranks","kind":"GitHub repository","url":"https://github.com/Rrques0/nepal-ranks","description":"TypeScript project.","language":"TypeScript","fork":false,"updatedAt":"2026-03-29T17:40:05Z"},
+    {"name":"ai-job-search","kind":"GitHub fork / experiment","url":"https://github.com/Rrques0/ai-job-search","description":"Forked AI-powered job application framework; use as an experiment, not as an original project claim.","language":"","fork":true,"updatedAt":"2026-07-10T05:04:28Z"},
+    {"name":"InfiniTime-Experiment","kind":"GitHub fork / experiment","url":"https://github.com/Rrques0/InfiniTime-Experiment","description":"Forked watchface experiment.","language":"C","fork":true,"updatedAt":"2025-03-05T01:09:59Z"},
+    {"name":"BLACKLINE FABRICATION NODE","kind":"Local project / not yet published","url":"","description":"Dual-screen TouchDesigner cyber-factory diagnostic simulation with generated PLC, machine, defect, and security telemetry.","language":"Python / GLSL","fork":false,"updatedAt":""}
+  ]
+}

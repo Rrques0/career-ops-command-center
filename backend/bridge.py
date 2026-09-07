@@ -120,7 +120,9 @@ class Bridge:
             'scan': asdict(intel.latest_scan), 'scanHistory': history,
             'funnel': {stage: sum(j['stage'] == stage for j in jobs) for stage in STAGES},
             'syncPending': [p for p in projections.values() if p['status'] == 'pending'],
-            'scholarships': read(ENGINE / 'data/scholarships.md')}
+            'scholarships': read(ENGINE / 'data/scholarships.md'),
+            'projects': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('projects', []),
+            'githubProfile': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('githubProfile', '')}
     def job(self, job_id, company, role, location, url, stage, date, notes, number, report, details):
         assessment = native.assess_job({'role': role, 'location': location})
         strategies = []

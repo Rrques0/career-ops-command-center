@@ -10,11 +10,19 @@ test('real engine telemetry, all modules, and Shadow DOM isolation', async ({ pa
   const data = await (await request.get('/api/snapshot')).json();
   await expect(page.locator('.metric').first()).toContainText(data.scan.checked.toLocaleString());
   await expect(page.locator('tbody tr')).toHaveCount(Math.min(8, data.funnel.Discovered));
-  for (const name of ['Applications', 'Skills & credentials', 'Sources', 'Activity', 'My documents', 'Guide']) {
+  for (const name of ['Applications', 'Projects', 'Skills & credentials', 'Sources', 'Activity', 'My documents', 'Guide']) {
     await page.getByRole('navigation').getByRole('button', { name, exact: true }).click();
     await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
   }
   expect(await page.evaluate(() => !!document.getElementById('career-hub-root')?.shadowRoot)).toBe(true);
+});
+
+test('portfolio index distinguishes original work, forks, and local projects', async ({ page }) => {
+  await page.getByRole('navigation', { name: 'Work navigation' }).getByRole('button', { name: 'Projects', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible();
+  await expect(page.getByText('career-ops-command-center', { exact: true })).toBeVisible();
+  await expect(page.getByText('GitHub fork / experiment').first()).toBeVisible();
+  await expect(page.getByText('BLACKLINE FABRICATION NODE', { exact: true })).toBeVisible();
 });
 
 test('application search, drawer, persistent transitions and contact notes', async ({ page, request }) => {
