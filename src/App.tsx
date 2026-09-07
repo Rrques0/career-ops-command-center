@@ -18,7 +18,6 @@ export function App() {
   const [sharing, setSharing] = useState(false);
   const [quick, setQuick] = useState(false);
   const [stage, setStage] = usePreference('stage', 'All', ['All', ...stages]);
-  const [hero, setHero] = usePreference('hero', 'show', ['show', 'hide']);
   useEffect(() => {
     const handler = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setQuick(value => !value); } };
     window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler);
@@ -49,8 +48,7 @@ export function App() {
     {offline && <div className="notice error" role="alert">{offline} {data && 'Showing the last successful snapshot.'}<button onClick={() => void refresh()}>Retry connection</button></div>}
     {message && <div className="notice" role="status">{message}<button onClick={() => setMessage('')}>Dismiss</button></div>}
     {!data ? <section className="panel"><h2>{offline ? 'Start the local engine' : 'Reading your Career Ops files…'}</h2><p>Open My Career Hub from your Desktop. The launcher starts the Python engine and web interface together.</p></section> : <>
-      {view === 'Command' && <div className="focus-controls"><button onClick={() => setHero(hero === 'show' ? 'hide' : 'show')}>{hero === 'show' ? 'Focus mode · hide scene' : 'Show ice scene'}</button><button onClick={() => setView('Applications')}>Go straight to my applications →</button></div>}
-      {view === 'Command' && hero === 'show' && <GlacialHero data={data} working={working} run={() => void run('autopilot')} explore={() => setView('Applications')}/>}
+      {view === 'Command' && <GlacialHero data={data} working={working} run={() => void run('autopilot')} explore={() => setView('Applications')}/>}
       {!!data.syncPending?.length && <div className="notice error" role="alert">{data.syncPending.length} stage updates are saved locally but still need synchronization with the native tracker.<button onClick={async () => { try { await action('sync', {}); await refresh(); } catch (error) { setMessage(String(error)); } }}>Retry synchronization</button></div>}
       <section className="identity"><div><span className="eyebrow">OPERATOR / AK</span><h2>{data.operator.name}</h2><p>{data.operator.headline}</p></div><div className="identity-meta"><b>{data.operator.location}</b>{safeLink(data.operator.linkedin ?? '') && <a href={safeLink(data.operator.linkedin ?? '')} target="_blank" rel="noreferrer">My LinkedIn profile ↗</a>}<button onClick={() => setSharing(true)}>Draft a LinkedIn project post</button><span>WGU Cybersecurity · {data.operator.education.remaining_classes ?? 'Unknown'} classes remaining</span><span>Early-career cyber · infrastructure · GRC · manufacturing IT/OT</span></div></section>
       {view === 'Command' && <>

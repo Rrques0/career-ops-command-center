@@ -81,11 +81,8 @@ test('LinkedIn project draft is editable and stays draft-only', async ({ page })
   await expect(dialog).toHaveCount(0);
 });
 
-test('quick navigation, history, saved filters and focus mode', async ({ page }) => {
-  await page.getByRole('button', { name: 'Focus mode · hide scene' }).click();
-  await expect(page.locator('.glacial-hero')).toHaveCount(0);
-  await page.reload();
-  await expect(page.locator('.glacial-hero')).toHaveCount(0);
+test('quick navigation and saved application preferences', async ({ page }) => {
+  await expect(page.locator('.glacial-hero')).toBeVisible();
   await page.keyboard.press('Control+k');
   const quick = page.getByRole('dialog', { name: 'Quick navigation' });
   await expect(quick).toBeVisible();
