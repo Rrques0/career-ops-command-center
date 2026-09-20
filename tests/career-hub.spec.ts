@@ -53,6 +53,7 @@ test('application search, drawer, persistent transitions and contact notes', asy
 
 test('offline state is clear and recovers without placeholders', async ({ page }) => {
   await page.route('**/api/snapshot', route => route.fulfill({ status: 503, body: '{}' }));
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
   await expect(page.getByRole('alert')).toContainText('engine is unavailable', { timeout: 10000 });
   await expect(page.getByRole('heading', { name: 'Archis Khanal', exact: true })).toBeVisible();
   await page.unroute('**/api/snapshot');

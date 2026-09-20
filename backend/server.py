@@ -1,5 +1,6 @@
 """Loopback-only command center. Same-origin writes; no arbitrary files or commands."""
 import argparse
+import gzip
 import json
 import mimetypes
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -11,9 +12,14 @@ from .tasks import Tasks
 class Handler(BaseHTTPRequestHandler):
     def reply(self, data, status=200):
         payload = json.dumps(data, ensure_ascii=False).encode()
+        compressed = 'gzip' in self.headers.get('Accept-Encoding', '').lower()
+        if compressed:
+            payload = gzip.compress(payload, compresslevel=6)
         self.send_response(status)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Cache-Control', 'no-store')
+        self.send_header('Content-Length', str(len(payload)))
+        if compressed: self.send_header('Content-Encoding', 'gzip')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.end_headers()
         self.wfile.write(payload)

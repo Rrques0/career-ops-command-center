@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { action, snapshot, stages, safeLink, displayDate as date, type Opportunity, type Snapshot } from './services/command';
 import { ActionDrawer } from './components/ActionDrawer';
 import { GlacialHero } from './components/GlacialHero';
@@ -18,15 +18,28 @@ export function App() {
   const [sharing, setSharing] = useState(false);
   const [quick, setQuick] = useState(false);
   const [stage, setStage] = usePreference('stage', 'All', ['All', ...stages]);
+  const refreshInFlight = useRef<Promise<void> | undefined>(undefined);
   useEffect(() => {
     const handler = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setQuick(value => !value); } };
     window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler);
   }, []);
   const [selected, setSelected] = useState('');
   const refresh = useCallback(async () => {
-    try { setData(await snapshot()); setOffline(''); } catch (error) { setOffline(String(error)); }
+    if (refreshInFlight.current) return refreshInFlight.current;
+    const request = (async () => {
+      try { setData(await snapshot()); setOffline(''); } catch (error) { setOffline(String(error)); }
+    })();
+    refreshInFlight.current = request;
+    try { await request; } finally { if (refreshInFlight.current === request) refreshInFlight.current = undefined; }
   }, []);
-  useEffect(() => { void refresh(); const id = setInterval(() => void refresh(), 5000); return () => clearInterval(id); }, [refresh]);
+  useEffect(() => {
+    void refresh();
+    const poll = () => { if (document.visibilityState === 'visible') void refresh(); };
+    const onVisibility = () => { if (document.visibilityState === 'visible') void refresh(); };
+    const id = setInterval(poll, 15000);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisibility); };
+  }, [refresh]);
   async function run(kind: string, jobId = '') {
     setBusy(true); setMessage('');
     try { await action('tasks', { kind, jobId }); if (kind === 'organize') { setStage('Discovered'); setView('Applications'); } else setView('Activity'); setSelected(''); await refresh(); }

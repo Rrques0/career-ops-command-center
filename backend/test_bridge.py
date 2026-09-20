@@ -106,6 +106,8 @@ class BridgeTests(unittest.TestCase):
             self.assertEqual(error.exception.code, 403)
         with urlopen(url + '/api/health') as response:
             self.assertEqual(json.load(response)['service'], 'career-ops-command')
+        with urlopen(Request(url + '/api/health', headers={'Accept-Encoding': 'gzip'})) as response:
+            self.assertEqual(response.headers.get('Content-Encoding'), 'gzip')
         with self.assertRaises(HTTPError) as error: urlopen(url + '/api/../data/operator.yml')
         self.assertEqual(error.exception.code, 404)
 

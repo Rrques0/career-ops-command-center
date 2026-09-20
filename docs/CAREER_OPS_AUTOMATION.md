@@ -20,11 +20,16 @@ Reduce the daily job-search routine to one safe action: refresh the queue. The c
 
 If scanning fails, the persisted task is marked failed and its log is visible in Activity. The last successful snapshot remains available. The workflow does not mutate application stages or canonical tracker records.
 
+## Performance contract
+
+The command center treats the snapshot as a read model, not a live stream. Refreshes are single-flight so a slow local parser cannot create a request pile-up; background refresh runs every 15 seconds only while the page is visible and a visibility change triggers an immediate read. JSON responses are gzip-compressed when the browser advertises support. The client keeps the last successful snapshot visible during a transient engine failure.
+
 ## Verification
 
 - Backend test: unsupported task kinds are rejected; organize is accepted and uses the scanner command.
 - Browser test: clicking Refresh my queue routes to Applications with the Discovered stage selected.
 - Existing backend and browser suites verify tracker writes, offline behavior, navigation, and application state persistence.
+- The backend health endpoint verifies gzip negotiation; the production bundle remains below the 200 KB compressed budget.
 
 ## Non-goals
 
