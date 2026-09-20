@@ -24,7 +24,7 @@ class Tasks:
                                if task['status'] == 'failed' and 'usage limit' in task['log'].lower() else '')
         return tasks
     def launch(self, kind, job_id=''):
-        if kind not in {'scan', 'autopilot', 'evaluate', 'strategy', 'sources', 'followups', 'upskill', 'pdf', 'email', 'interview_plan', 'scholarship_find'}:
+        if kind not in {'scan', 'organize', 'autopilot', 'evaluate', 'strategy', 'sources', 'followups', 'upskill', 'pdf', 'email', 'interview_plan', 'scholarship_find'}:
             raise ValueError('Unsupported task')
         job = self.bridge.find(job_id) if job_id else None
         if kind in {'evaluate', 'strategy'} and not job:
@@ -70,8 +70,16 @@ class Tasks:
     def run(self, task_id, kind, job):
         status = 'completed'
         try:
-            if kind in {'scan', 'autopilot'}:
+            if kind in {'scan', 'organize', 'autopilot'}:
                 self.command(task_id, ['node', 'scan.mjs', '--since', '14', '--quiet'])
+            if kind == 'organize':
+                queue = [j for j in self.bridge.snapshot()['jobs'] if j['stage'] == 'Discovered'][:5]
+                if queue:
+                    preview = '\n'.join(f"  {index}. {job['company']} — {job['role']} ({job['tier']}, {job['triagePercent']}% priority)"
+                                        for index, job in enumerate(queue, 1))
+                    self.append(task_id, f'\nQueue refreshed. {len(queue)} top discovered roles are ready for review:\n{preview}\n')
+                else:
+                    self.append(task_id, '\nQueue refreshed. No discovered roles are waiting for review.\n')
             if kind in {'autopilot', 'evaluate'}:
                 if job:
                     targets = [native.QueuedJob(job['url'], job['company'], job['role'], job['location'])]

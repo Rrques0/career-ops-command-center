@@ -10,7 +10,7 @@ from urllib.error import HTTPError
 
 from backend.bridge import Bridge, identity, native, safe_url
 from backend.server import create_server
-from backend.store import Store
+from backend.store import Store, now
 from backend.tasks import Tasks
 
 class BridgeTests(unittest.TestCase):
@@ -68,6 +68,24 @@ class BridgeTests(unittest.TestCase):
         for url in ['javascript:alert(1)', 'file:///C:/private', 'https://user:pass@example.com']:
             self.assertEqual(safe_url(url), '')
         with self.assertRaises(ValueError): Tasks(self.bridge).launch('powershell')
+
+    def test_organize_runs_the_free_scanner_and_prepares_a_review_queue(self):
+        tasks = Tasks(self.bridge)
+        with self.store.connect() as db:
+            db.execute('INSERT INTO tasks VALUES(?,?,?,?,?,?)', ('unit-organize', 'organize', 'running', now(), '', ''))
+        queue = {'jobs': [
+            {'stage': 'Discovered', 'company': 'Northstar Fabrication', 'role': 'Systems Administrator', 'tier': 'HIGH', 'triagePercent': 91},
+            {'stage': 'Evaluated', 'company': 'Example', 'role': 'Ignored', 'tier': 'GOOD', 'triagePercent': 75},
+        ]}
+        tasks.lock.acquire()
+        with patch.object(tasks, 'command') as command, patch.object(self.bridge, 'snapshot', return_value=queue):
+            tasks.run('unit-organize', 'organize', None)
+        self.assertEqual(command.call_args.args[1], ['node', 'scan.mjs', '--since', '14', '--quiet'])
+        with self.store.connect() as db:
+            result = db.execute('SELECT status,log FROM tasks WHERE id=?', ('unit-organize',)).fetchone()
+        self.assertEqual(result['status'], 'completed')
+        self.assertIn('Queue refreshed. 1 top discovered roles', result['log'])
+        self.assertIn('Northstar Fabrication', result['log'])
 
     def test_existing_ranker_prioritizes_early_career_and_does_not_claim_percentile(self):
         junior = native.assess_job({'role': 'Junior Security Analyst', 'location': 'Syracuse'})
