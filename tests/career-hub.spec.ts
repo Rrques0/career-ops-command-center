@@ -82,6 +82,18 @@ test('LinkedIn project draft is editable and stays draft-only', async ({ page })
   await expect(dialog).toHaveCount(0);
 });
 
+test('application prefills persist locally and preview safe macros', async ({ page }) => {
+  await page.getByRole('navigation').getByRole('button', { name: 'My documents', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'My documents', exact: true })).toBeVisible();
+  await page.getByLabel('First name').fill('Archis');
+  await page.getByLabel('Last name').fill('Khanal');
+  await page.getByText('Preview macro block').click();
+  await expect(page.locator('.prefill-vault pre')).toContainText('First name: Archis');
+  await page.reload();
+  await expect(page.getByLabel('First name')).toHaveValue('Archis');
+  await expect(page.getByLabel('Last name')).toHaveValue('Khanal');
+});
+
 test('quick navigation and saved application preferences', async ({ page }) => {
   await expect(page.locator('.glacial-hero')).toBeVisible();
   await page.keyboard.press('Control+k');
