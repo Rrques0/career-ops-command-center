@@ -36,3 +36,12 @@ SQLite fingerprint and force a fresh projection. The local Fresh JArvis / Super 
 read-only and imports only a small task/evidence/blocker projection; it never crawls or mutates an
 Obsidian vault. This improves idle refresh cost without adding a new persistence system or trust
 surface.
+
+## 2026-09-26 — Prefer one safe next action over navigation
+
+Career Ops now uses a small, pure `nextSafeAction` presentation module to make one deterministic
+choice from the existing local snapshot: review the best report, evaluate the best discovered role,
+or run the queue. Starting an evaluation keeps that role's drawer open rather than routing the user
+to Activity and requiring a second search for the result. The module owns no persistence or ranking
+rules, and it cannot apply, send outreach, or change an application stage; those boundaries remain
+with the user and the native Career Ops tracker.

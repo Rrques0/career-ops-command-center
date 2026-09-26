@@ -1,5 +1,18 @@
 import { expect, test } from '@playwright/test';
 
+const emptyFunnel = { Discovered: 0, Evaluated: 0, Applied: 0, 'Screen/Interview': 0, Offer: 0, Archived: 0 };
+
+function fixtureJob(source: Record<string, unknown>, changes: Record<string, unknown>) {
+  return {
+    ...source,
+    id: 'e2e-next-action-role', company: 'Fixture Fabrication', role: 'Systems Administrator', location: 'Syracuse, NY',
+    url: 'https://example.test/jobs/fixture', stage: 'Discovered', date: '2026-09-26', updatedAt: '2026-09-26T00:00:00Z',
+    notes: '', trackerNumber: '', rank: 999, tier: 'HIGH', triagePercent: 99, rationale: 'Controlled priority fixture.',
+    lane: 'Systems / Infrastructure / IAM', bridgeLabel: 'Direct target', evaluationScore: 0, gaps: [], strengths: [],
+    nextAction: 'Review the live posting.', report: '', draft: '', events: [], ...changes,
+  };
+}
+
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
@@ -145,6 +158,52 @@ test('one-click queue run starts repeatable triage and lands on applications', a
     await route.fulfill({ status: 202, contentType: 'application/json', body: '{"id":"queue-refresh-test"}' });
   });
   await page.getByRole('button', { name: /Run my queue/ }).first().click();
+  await expect(page).toHaveURL(/#Applications$/);
+  await expect(page.getByLabel('Stage', { exact: true })).toHaveValue('All');
+  expect(submitted).toEqual({ kind: 'autopilot', jobId: '' });
+});
+
+test('one next action evaluates the top discovered role and keeps its pack workspace open', async ({ page, request }) => {
+  const base = await (await request.get('/api/snapshot')).json();
+  const job = fixtureJob(base.jobs[0], {});
+  const fixture = { ...base, jobs: [job], tasks: [], funnel: { ...emptyFunnel, Discovered: 1 } };
+  const writes: string[] = []; let submitted: unknown;
+  page.on('request', request => { if (request.method() === 'POST') writes.push(new URL(request.url()).pathname); });
+  await page.route('**/api/snapshot', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(fixture) }));
+  await page.route('**/api/tasks', async route => { submitted = route.request().postDataJSON(); await route.fulfill({ status: 202, contentType: 'application/json', body: '{"id":"next-action-evaluate"}' }); });
+  await page.reload();
+  await page.getByRole('button', { name: 'Do next safe action' }).click();
+  await expect(page).toHaveURL(/#Applications$/);
+  const drawer = page.getByRole('dialog', { name: 'Systems Administrator' });
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toContainText('Fixture Fabrication');
+  expect(submitted).toEqual({ kind: 'evaluate', jobId: 'e2e-next-action-role' });
+  expect(writes).toEqual(['/api/tasks']);
+});
+
+test('one next action opens the best evaluated pack without starting a task', async ({ page, request }) => {
+  const base = await (await request.get('/api/snapshot')).json();
+  const job = fixtureJob(base.jobs[0], { stage: 'Evaluated', report: 'Grounded evaluation fixture.', evaluationScore: 5 });
+  const fixture = { ...base, jobs: [job], tasks: [], funnel: { ...emptyFunnel, Evaluated: 1 } };
+  const writes: string[] = [];
+  page.on('request', request => { if (request.method() === 'POST') writes.push(new URL(request.url()).pathname); });
+  await page.route('**/api/snapshot', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(fixture) }));
+  await page.reload();
+  await page.getByRole('button', { name: 'Do next safe action' }).click();
+  const drawer = page.getByRole('dialog', { name: 'Systems Administrator' });
+  await expect(drawer).toBeVisible();
+  await expect(drawer.locator('.application-pack')).toBeVisible();
+  expect(writes).toEqual([]);
+});
+
+test('one next action runs the queue only when no role needs review', async ({ page, request }) => {
+  const base = await (await request.get('/api/snapshot')).json();
+  const fixture = { ...base, jobs: [], tasks: [], funnel: emptyFunnel };
+  let submitted: unknown;
+  await page.route('**/api/snapshot', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(fixture) }));
+  await page.route('**/api/tasks', async route => { submitted = route.request().postDataJSON(); await route.fulfill({ status: 202, contentType: 'application/json', body: '{"id":"next-action-queue"}' }); });
+  await page.reload();
+  await page.getByRole('button', { name: 'Do next safe action' }).click();
   await expect(page).toHaveURL(/#Applications$/);
   await expect(page.getByLabel('Stage', { exact: true })).toHaveValue('All');
   expect(submitted).toEqual({ kind: 'autopilot', jobId: '' });
