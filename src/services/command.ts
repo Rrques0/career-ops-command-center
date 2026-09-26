@@ -38,11 +38,17 @@ export interface Snapshot {
   jarvis: JarvisSnapshot;
   syncPending: { id: string; error: string }[];
 }
+let cachedSnapshot: Snapshot | undefined;
+let cachedEtag = '';
 export async function snapshot(): Promise<Snapshot> {
-  const response = await fetch('/api/snapshot', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+  const headers = cachedEtag ? { 'If-None-Match': cachedEtag } : undefined;
+  const response = await fetch('/api/snapshot', { cache: 'no-store', headers, signal: AbortSignal.timeout(15000) });
+  if (response.status === 304 && cachedSnapshot) return cachedSnapshot;
   if (!response.ok) throw new Error('The local Python engine is unavailable. Reopen the Desktop shortcut.');
   const value = await response.json();
   if (!Array.isArray(value.jobs) || !value.operator || !Array.isArray(value.tasks)) throw new Error('The engine returned an invalid snapshot.');
+  cachedEtag = response.headers.get('ETag') || cachedEtag;
+  cachedSnapshot = value;
   return value;
 }
 export async function action(path: 'tasks' | 'stage' | 'contact' | 'sync', data: Record<string, string>) {

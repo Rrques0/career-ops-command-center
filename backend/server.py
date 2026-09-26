@@ -10,7 +10,7 @@ from .store import Store
 from .tasks import Tasks
 
 class Handler(BaseHTTPRequestHandler):
-    def reply(self, data, status=200):
+    def reply(self, data, status=200, headers=None):
         payload = json.dumps(data, ensure_ascii=False).encode()
         compressed = 'gzip' in self.headers.get('Accept-Encoding', '').lower()
         if compressed:
@@ -20,9 +20,15 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-store')
         self.send_header('Content-Length', str(len(payload)))
         if compressed: self.send_header('Content-Encoding', 'gzip')
+        for key, value in (headers or {}).items(): self.send_header(key, value)
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.end_headers()
         self.wfile.write(payload)
+    def not_modified(self, etag):
+        self.send_response(304)
+        self.send_header('ETag', etag)
+        self.send_header('Cache-Control', 'no-cache')
+        self.end_headers()
     def trusted(self):
         if self.headers.get('Host') not in self.server.allowed_hosts: return False
         origin = self.headers.get('Origin')
@@ -32,7 +38,10 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         try:
             if path == '/api/health': return self.reply({'service': 'career-ops-command', 'status': 'ready'})
-            if path == '/api/snapshot': return self.reply(self.server.bridge.snapshot() | {'tasks': self.server.tasks.list()})
+            if path == '/api/snapshot':
+                etag = self.server.bridge.etag()
+                if self.headers.get('If-None-Match') == etag: return self.not_modified(etag)
+                return self.reply(self.server.bridge.snapshot() | {'tasks': self.server.tasks.list()}, headers={'ETag': etag})
             if path.startswith('/api/'): return self.reply({'error': 'Unknown endpoint'}, 404)
             root = (ROOT / 'dist').resolve()
             file = (root / path.lstrip('/')).resolve() if path != '/' else root / 'index.html'

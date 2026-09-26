@@ -117,6 +117,33 @@ class Bridge:
     def __init__(self, store):
         self.store = store
         self.sync_lock = threading.Lock()
+    def etag(self):
+        """Return a cheap revision token without parsing the engine or loading reports."""
+        candidates = [ENGINE / 'cv.md', ENGINE / 'config' / 'profile.yml', ROOT / 'data']
+        parts = []
+        if self.store.path.is_file():
+            try:
+                stat = self.store.path.stat()
+                parts.append(f'{self.store.path}:{stat.st_mtime_ns}:{stat.st_size}')
+            except OSError: parts.append(str(self.store.path))
+        else: parts.append(str(self.store.path))
+        for candidate in candidates:
+            paths = candidate.rglob('*') if candidate.is_dir() else [candidate]
+            for path in paths:
+                if not path.is_file() or path.suffix in {'.sqlite3', '.log', '.tmp'}: continue
+                try:
+                    stat = path.stat()
+                    parts.append(f'{path}:{stat.st_mtime_ns}:{stat.st_size}')
+                except OSError: continue
+        for suffix in ('-wal', '-shm'):
+            path = Path(str(self.store.path) + suffix)
+            if path.is_file():
+                try:
+                    stat = path.stat()
+                    parts.append(f'{path}:{stat.st_mtime_ns}:{stat.st_size}')
+                except OSError: pass
+        digest = hashlib.sha256('\n'.join(sorted(parts)).encode()).hexdigest()[:20]
+        return f'"{digest}"'
     def snapshot(self):
         pending = native.parse_pipeline()
         applications = native.parse_applications()
