@@ -13,6 +13,9 @@
 - The application drawer includes a minimum viable Application Pack review block. It assembles the
   selected role's lane, bridge label, report-backed fit, gaps, and next action into a copyable
   review artifact; it never submits, sends, or advances an application.
+- Skills & credentials includes a local learning roadmap for WGU degree completion, OSCP, CCNA,
+  RHCA, and SSCP. Each path has an official resource link, a practical next step, a lane tie-in,
+  and a locally persisted planning status.
 
 ## Next seam: deeper generated outputs
 
