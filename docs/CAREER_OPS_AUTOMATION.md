@@ -2,13 +2,13 @@
 
 ## Outcome
 
-Reduce the daily job-search routine to one safe action: refresh the queue. The command center runs the existing zero-token scan, lets the existing Career Ops parser/ranker organize the discovered records, and returns the user to the actionable application list.
+Reduce the daily job-search routine to one safe action: run the queue. The command center runs the existing zero-token scan, lets the existing Career Ops parser/ranker organize the discovered records, evaluates the highest-priority roles with the configured AI workflow, and returns the user to the actionable application list.
 
 ## Interface and acceptance criteria
 
-- A user can start **Refresh my queue** from the command page or Applications.
-- The workflow invokes only the existing allowlisted `scan.mjs --since 14 --quiet` command. It does not invoke an AI CLI, generate an application, send a message, or submit a form.
-- When the scan completes, the UI opens Applications filtered to Discovered roles, ordered by the existing deterministic ranker.
+- A user can start **Run my queue** from the command page. A separate scan-only action remains available when the user wants a free refresh without evaluation.
+- The workflow invokes the existing allowlisted `scan.mjs --since 14 --quiet` command and then the existing bounded evaluation workflow for the highest-priority discovered roles. It does not generate a submission, send a message, or submit a form.
+- When the workflow starts, the UI opens Applications with the full queue available for review; reports and risk signals are prepared by the background task as they complete.
 - A failed scan is visible in Activity and does not erase existing records.
 - Full evaluation remains explicit. The existing Find + evaluate action can use configured AI account usage but must never submit or contact anyone.
 

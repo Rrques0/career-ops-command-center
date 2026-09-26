@@ -103,16 +103,16 @@ test('quick navigation and saved application preferences', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Applications', exact: true })).toBeVisible();
 });
 
-test('queue refresh stays free of AI evaluation and lands on discovered roles', async ({ page }) => {
+test('one-click queue run starts repeatable triage and lands on applications', async ({ page }) => {
   let submitted: unknown;
   await page.route('**/api/tasks', async route => {
     submitted = route.request().postDataJSON();
     await route.fulfill({ status: 202, contentType: 'application/json', body: '{"id":"queue-refresh-test"}' });
   });
-  await page.getByRole('button', { name: /Refresh my queue/ }).first().click();
+  await page.getByRole('button', { name: /Run my queue/ }).first().click();
   await expect(page).toHaveURL(/#Applications$/);
-  await expect(page.getByLabel('Stage', { exact: true })).toHaveValue('Discovered');
-  expect(submitted).toEqual({ kind: 'organize', jobId: '' });
+  await expect(page.getByLabel('Stage', { exact: true })).toHaveValue('All');
+  expect(submitted).toEqual({ kind: 'autopilot', jobId: '' });
 });
 
 test('funnel opens the matching stage and mobile list remains usable', async ({ page }) => {
