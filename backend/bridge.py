@@ -69,6 +69,10 @@ def case_studies():
     value = yaml.safe_load(read(ROOT / 'data/case-studies.yml')) or []
     return value if isinstance(value, list) else []
 
+def learning_paths():
+    value = yaml.safe_load(read(ROOT / 'data/learning-paths.yml')) or []
+    return value if isinstance(value, list) else []
+
 class Bridge:
     def __init__(self, store):
         self.store = store
@@ -145,7 +149,7 @@ class Bridge:
             'scholarships': read(ENGINE / 'data/scholarships.md'),
             'projects': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('projects', []),
             'githubProfile': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('githubProfile', ''),
-            'caseStudies': case_studies()}
+            'caseStudies': case_studies(), 'learningPaths': learning_paths()}
     def job(self, job_id, company, role, location, url, stage, date, notes, number, report, details):
         assessment = native.assess_job({'role': role, 'location': location})
         strategies = []

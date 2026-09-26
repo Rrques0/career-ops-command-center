@@ -101,6 +101,20 @@ test('application prefills persist locally and preview safe macros', async ({ pa
   await expect(page.getByLabel('Last name')).toHaveValue('Khanal');
 });
 
+test('learning roadmap keeps WGU and certification paths organized', async ({ page }) => {
+  await page.getByRole('navigation').getByRole('button', { name: 'Skills & credentials', exact: true }).click();
+  const board = page.getByRole('region', { name: 'Learning paths' });
+  await expect(board).toBeVisible();
+  for (const title of ['Finish the WGU Cybersecurity & Information Assurance program', 'OSCP preparation', 'CCNA preparation', 'RHCA preparation path', 'SSCP preparation']) {
+    await expect(board.getByRole('heading', { name: title, exact: true })).toBeVisible();
+  }
+  const wgu = board.getByLabel('Finish the WGU Cybersecurity & Information Assurance program status');
+  await wgu.selectOption('completed');
+  await page.reload();
+  await page.getByRole('navigation').getByRole('button', { name: 'Skills & credentials', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Learning paths' }).getByLabel('Finish the WGU Cybersecurity & Information Assurance program status')).toHaveValue('completed');
+});
+
 test('quick navigation and saved application preferences', async ({ page }) => {
   await expect(page.locator('.glacial-hero')).toBeVisible();
   await page.keyboard.press('Control+k');

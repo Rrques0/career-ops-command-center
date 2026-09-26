@@ -1,0 +1,55 @@
+- id: wgu-cybersecurity
+  title: Finish the WGU Cybersecurity & Information Assurance program
+  track: Degree completion
+  provider: Western Governors University
+  url: https://my.wgu.edu/
+  status: in-progress
+  goal: Complete the 7 remaining classes and keep the degree pipeline moving.
+  nextStep: Open the WGU portal, confirm the active course sequence, and schedule the next study block.
+  timebox: Use the current WGU term plan; do not invent a completion date.
+  lane: All target lanes
+  source: User-provided education context
+- id: oscp-prep
+  title: OSCP preparation
+  track: Offensive security foundation
+  provider: OffSec
+  url: https://www.offsec.com/courses/pen-200/
+  status: planned
+  goal: Build authorized penetration-testing and reporting skills that complement infrastructure security.
+  nextStep: Review the current PEN-200 outline and confirm prerequisites, budget, and lab time before enrolling.
+  timebox: Plan after protecting WGU study capacity.
+  lane: Cybersecurity / GRC / CMMC
+  source: Official OffSec course page
+- id: ccna-prep
+  title: CCNA preparation
+  track: Networking core
+  provider: Cisco
+  url: https://www.cisco.com/site/us/en/learn/training-certifications/certifications/associate/ccna/index.html
+  status: planned
+  goal: Formalize routing, switching, VLAN, and troubleshooting knowledge behind the existing network experience.
+  nextStep: Use the official exam topics to build a small VLAN, routing, and troubleshooting lab.
+  timebox: Choose a weekly lab block after WGU planning.
+  lane: Systems / Infrastructure / IAM
+  source: Official Cisco certification page
+- id: rhca-prep
+  title: RHCA preparation path
+  track: Linux / automation depth
+  provider: Red Hat
+  url: https://www.redhat.com/en/services/certification/rhca
+  status: planned
+  goal: Turn the existing RHEL and automation background into a deliberate Red Hat certification path.
+  nextStep: Verify the current RHCA requirements and map the prerequisite certification sequence before choosing exams.
+  timebox: Treat as a longer-term path after the near-term WGU and networking work.
+  lane: Systems / Infrastructure / IAM
+  source: Official Red Hat certification page
+- id: sscp-prep
+  title: SSCP preparation
+  track: Security operations credential
+  provider: ISC2
+  url: https://www.isc2.org/certifications/sscp
+  status: planned
+  goal: Reinforce access controls, network security, operations, and incident-response language for early-career security roles.
+  nextStep: Review the current SSCP domains and confirm experience or Associate of ISC2 eligibility before scheduling.
+  timebox: Use as a focused credential option after the WGU course sequence is stable.
+  lane: Cybersecurity / GRC / CMMC
+  source: Official ISC2 certification page

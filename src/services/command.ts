@@ -9,6 +9,11 @@ export interface Opportunity {
   evaluationScore?: number; gaps: string[]; strengths: string[]; nextAction: string;
   report: string; draft: string; events: AuditEvent[];
 }
+export interface LearningPathRecord {
+  id: string; title: string; track: string; provider: string; url: string;
+  status: 'planned' | 'in-progress' | 'completed'; goal: string; nextStep: string;
+  timebox: string; lane: string; source: string;
+}
 export interface Task { id: string; kind: string; status: string; started: string; finished: string; log: string; summary?: string }
 export interface Snapshot {
   generatedAt: string;
@@ -22,6 +27,7 @@ export interface Snapshot {
   funnel: Record<Stage, number>; scholarships: string; tasks: Task[];
   githubProfile?: string; projects: { name: string; kind: string; url: string; description: string; language: string; fork: boolean; updatedAt: string }[];
   caseStudies: { id: string; title: string; lane: string; situation: string; risk: string; action: string; result: string; learned: string }[];
+  learningPaths: LearningPathRecord[];
   syncPending: { id: string; error: string }[];
 }
 export async function snapshot(): Promise<Snapshot> {
