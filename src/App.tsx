@@ -73,7 +73,7 @@ export function App() {
   function prepare(job: Opportunity) { setSelected(job.id); void run('evaluate', job.id, { preserveSelection: true }); }
   function doNextAction() {
     if (!next || nextDisabled) return;
-    if (next.kind === 'review') setSelected(next.job.id);
+    if (next.kind === 'review' || next.kind === 'lifecycle') setSelected(next.job.id);
     else if (next.kind === 'evaluate') prepare(next.job);
     else if (next.kind === 'queue') void run('autopilot');
     else setView('Activity');

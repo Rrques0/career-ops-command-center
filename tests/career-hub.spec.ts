@@ -209,6 +209,48 @@ test('one next action runs the queue only when no role needs review', async ({ p
   expect(submitted).toEqual({ kind: 'autopilot', jobId: '' });
 });
 
+test('one next action opens a running workflow instead of starting a duplicate', async ({ page, request }) => {
+  const base = await (await request.get('/api/snapshot')).json();
+  const job = fixtureJob(base.jobs[0], {});
+  const fixture = { ...base, jobs: [job], funnel: { ...emptyFunnel, Discovered: 1 }, tasks: [{ id: 'running-task', kind: 'evaluate', status: 'running', started: new Date().toISOString(), finished: '', log: 'Working…' }] };
+  const writes: string[] = [];
+  page.on('request', request => { if (request.method() === 'POST') writes.push(new URL(request.url()).pathname); });
+  await page.route('**/api/snapshot', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(fixture) }));
+  await page.reload();
+  await page.getByRole('button', { name: 'Do next safe action' }).click();
+  await expect(page).toHaveURL(/#Activity$/);
+  expect(writes).toEqual([]);
+});
+
+test('one next action surfaces the latest failed workflow before retrying', async ({ page, request }) => {
+  const base = await (await request.get('/api/snapshot')).json();
+  const job = fixtureJob(base.jobs[0], {});
+  const fixture = { ...base, jobs: [job], funnel: { ...emptyFunnel, Discovered: 1 }, tasks: [{ id: 'failed-task', kind: 'evaluate', status: 'failed', started: new Date().toISOString(), finished: new Date().toISOString(), log: 'Usage limit reached.' }] };
+  const writes: string[] = [];
+  page.on('request', request => { if (request.method() === 'POST') writes.push(new URL(request.url()).pathname); });
+  await page.route('**/api/snapshot', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(fixture) }));
+  await page.reload();
+  await page.getByRole('button', { name: 'Do next safe action' }).click();
+  await expect(page).toHaveURL(/#Activity$/);
+  await expect(page.getByText('Usage limit reached.', { exact: true })).toBeVisible();
+  expect(writes).toEqual([]);
+});
+
+test('one next action prioritizes an active application over a fresh scan', async ({ page, request }) => {
+  const base = await (await request.get('/api/snapshot')).json();
+  const job = fixtureJob(base.jobs[0], { stage: 'Applied', nextAction: 'Send a polite follow-up after the recorded wait window.' });
+  const fixture = { ...base, jobs: [job], tasks: [], funnel: { ...emptyFunnel, Applied: 1 } };
+  const writes: string[] = [];
+  page.on('request', request => { if (request.method() === 'POST') writes.push(new URL(request.url()).pathname); });
+  await page.route('**/api/snapshot', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(fixture) }));
+  await page.reload();
+  await page.getByRole('button', { name: 'Do next safe action' }).click();
+  const drawer = page.getByRole('dialog', { name: 'Systems Administrator' });
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toContainText('Send a polite follow-up after the recorded wait window.');
+  expect(writes).toEqual([]);
+});
+
 test('funnel opens the matching stage and mobile list remains usable', async ({ page }) => {
   await page.locator('.funnel').getByRole('button', { name: /Evaluated/ }).click();
   await expect(page.getByLabel('Stage', { exact: true })).toHaveValue('Evaluated');

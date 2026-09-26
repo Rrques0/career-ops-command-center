@@ -3,8 +3,10 @@ import type { Opportunity, Snapshot } from './command';
 export type NextAction =
   | { kind: 'review'; job: Opportunity; title: string; detail: string; button: string }
   | { kind: 'evaluate'; job: Opportunity; title: string; detail: string; button: string }
+  | { kind: 'lifecycle'; job: Opportunity; title: string; detail: string; button: string }
   | { kind: 'queue'; title: string; detail: string; button: string }
-  | { kind: 'activity'; title: string; detail: string; button: string };
+  | { kind: 'activity'; title: string; detail: string; button: string }
+  | { kind: 'failure'; title: string; detail: string; button: string };
 
 type NextActionState = Pick<Snapshot, 'jobs' | 'tasks'>;
 
@@ -22,6 +24,31 @@ export function nextSafeAction({ jobs, tasks }: NextActionState): NextAction {
     detail: `${running.kind} is working locally. Open its progress instead of starting a duplicate task.`,
     button: 'Open workflow progress',
   };
+
+  // Tasks are returned newest first. Surface the latest failure once, rather than
+  // silently starting the same potentially costly workflow again.
+  const latest = tasks[0];
+  if (latest?.status === 'failed') return {
+    kind: 'failure',
+    title: `${latest.kind} needs your review`,
+    detail: 'The latest local workflow failed. Review its Activity log before choosing whether to retry; Career Ops will not retry it automatically.',
+    button: 'Review workflow log',
+  };
+
+  const lifecycle = [
+    ['Offer', 'Review the offer from', 'Review offer workspace'],
+    ['Screen/Interview', 'Prepare for', 'Open interview workspace'],
+    ['Applied', 'Follow up with', 'Open follow-up workspace'],
+  ] as const;
+  for (const [stage, verb, button] of lifecycle) {
+    const active = byPriority(jobs.filter(job => job.stage === stage))[0];
+    if (active) return {
+      kind: 'lifecycle', job: active,
+      title: `${verb} ${active.company}`,
+      detail: active.nextAction || `This role is already ${stage}. Review its saved evidence and decide the next step before starting new work.`,
+      button,
+    };
+  }
 
   const reviewed = byPriority(jobs.filter(job => job.stage === 'Evaluated' && Boolean(job.report)))[0];
   if (reviewed) return {
@@ -46,4 +73,3 @@ export function nextSafeAction({ jobs, tasks }: NextActionState): NextAction {
     button: 'Run my queue',
   };
 }
-

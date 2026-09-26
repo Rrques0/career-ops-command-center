@@ -7,7 +7,7 @@ Reduce the daily job-search routine to one safe decision. The command center sel
 ## Interface and acceptance criteria
 
 - A user can start **Run my queue** from the command page. A separate scan-only action remains available when the user wants a free refresh without evaluation.
-- A stable **Do next safe action** control is available from Command and Applications. Its deterministic priority is: a report-ready evaluated role → the highest-priority discovered role → a fresh queue. A running task routes to its progress instead of starting a duplicate.
+- A stable **Do next safe action** control is available from Command and Applications. Its deterministic priority is: a running or latest-failed workflow → an active offer, interview, or applied role → a report-ready evaluated role → the highest-priority discovered role → a fresh queue. A running task routes to its progress instead of starting a duplicate, and a failure routes to its log instead of silently retrying.
 - Starting a role evaluation opens and retains that role's drawer. The task may prepare analysis and drafts, but the user still reviews the pack and submits any application personally.
 - The workflow invokes the existing allowlisted `scan.mjs --since 14 --quiet` command and then the existing bounded evaluation workflow for the highest-priority discovered roles. It does not generate a submission, send a message, or submit a form.
 - When the workflow starts, the UI opens Applications with the full queue available for review; reports and risk signals are prepared by the background task as they complete.
@@ -30,7 +30,7 @@ The command center treats the snapshot as a read model, not a live stream. Refre
 
 - Backend test: unsupported task kinds are rejected; organize is accepted and uses the scanner command.
 - Browser test: clicking Refresh my queue routes to Applications with the Discovered stage selected.
-- Browser tests cover a discovered fixture (one evaluate task, retained drawer, no application/contact/stage write), an evaluated fixture (opens its pack with no task), and an empty fixture (one queue task).
+- Browser tests cover a discovered fixture (one evaluate task, retained drawer, no application/contact/stage write), an evaluated fixture (opens its pack with no task), an empty fixture (one queue task), workflow attention states (running/failed → Activity without a POST), and an active application (opens the follow-up workspace rather than scanning).
 - Existing backend and browser suites verify tracker writes, offline behavior, navigation, and application state persistence.
 - The backend health endpoint verifies gzip negotiation; the production bundle remains below the 200 KB compressed budget.
 
