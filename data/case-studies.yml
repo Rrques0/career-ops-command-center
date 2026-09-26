@@ -1,0 +1,56 @@
+- id: identity-access
+  title: Production identity and access
+  lane: Systems / Infrastructure / IAM
+  situation: Production users, endpoints, and business systems required dependable identity and access control.
+  risk: Excess access, weak authentication, or inconsistent permissions could expose sensitive manufacturing information.
+  action: Administered Active Directory and Microsoft 365, managed permissions and MFA, and applied least-privilege and role-based access principles.
+  result: Maintained a supportable production access-control baseline across identity and business operations.
+  learned: Identity work is both a security control and a daily reliability function.
+- id: cmmc-readiness
+  title: CMMC / NIST evidence ownership
+  lane: Cybersecurity / GRC / CMMC
+  situation: A regulated manufacturer needed a repeatable CMMC Level 2 readiness program.
+  risk: Unmapped controls and incomplete evidence could block customer work and external assessment readiness.
+  action: Ran technical discovery, authored the SSP and policy/work-instruction library, and connected remediation priorities to operational evidence.
+  result: Established a documented compliance operating cadence grounded in the production environment.
+  learned: Strong GRC work connects controls to systems people actually operate.
+- id: manufacturing-ot
+  title: Manufacturing IT / OT reliability
+  lane: Manufacturing IT/OT
+  situation: Manufacturing systems spanned ERP, engineering workstations, servers, CNC controllers, and other OT systems.
+  risk: A cross-layer failure could interrupt production and create incomplete asset or access records.
+  action: Coordinated network and application troubleshooting, supported Matsuura and FASTEMS integrations, and validated connectivity, inventory, and workflow changes.
+  result: Supported production-system continuity while keeping technical and compliance records aligned.
+  learned: The best plant-floor support follows the problem across network, application, identity, and physical systems.
+- id: network-remote-access
+  title: Network and secure remote access
+  lane: Systems / Infrastructure / IAM
+  situation: Production and remote users needed reliable, controlled connectivity.
+  risk: Misconfigured segmentation, firewall rules, or remote access could create both downtime and security exposure.
+  action: Managed Ubiquiti and SonicWall infrastructure, VPN connectivity, segmentation, firewall troubleshooting, and MFA-backed remote access.
+  result: Kept remote-access and network troubleshooting tied to explicit security and operational requirements.
+  learned: Secure connectivity is a design and troubleshooting discipline, not just a device configuration task.
+- id: vulnerability-remediation
+  title: Vulnerability remediation and validation
+  lane: Cybersecurity / GRC / CMMC
+  situation: Production endpoints and infrastructure required ongoing security improvement.
+  risk: Unvalidated fixes can leave exposure in place or create new operational problems.
+  action: Performed vulnerability identification, security configuration review, remediation, and validation across production systems.
+  result: Converted findings into checked remediation work instead of leaving them as unowned scanner output.
+  learned: Evidence of validation is what turns a finding into a defensible security improvement.
+- id: vendor-coordination
+  title: Vendor and MSP coordination
+  lane: Manufacturing IT/OT
+  situation: Endpoint security, networking, backup, identity, and infrastructure work crossed internal and external teams.
+  risk: Vendor handoffs can create unclear ownership, duplicated spend, or unresolved technical gaps.
+  action: Worked directly with vendors and MSPs, translated operational requirements, and coordinated technical transitions.
+  result: Kept infrastructure projects connected to production needs and accountable owners.
+  learned: Clear requirements and ownership reduce both technical delay and unnecessary tooling.
+- id: secure-integrations
+  title: Secure manufacturing integrations
+  lane: Manufacturing IT/OT
+  situation: Manufacturing and ERP workflows needed internal integrations and operational tooling.
+  risk: Fast automation can expose proprietary data or weaken authorization boundaries.
+  action: Developed internal integrations and tooling around manufacturing/ERP systems while preserving proprietary-data boundaries and permission controls.
+  result: Improved operational visibility without treating data protection as an afterthought.
+  learned: Integration quality includes data boundaries, authorization, and maintainability—not only successful API calls.
