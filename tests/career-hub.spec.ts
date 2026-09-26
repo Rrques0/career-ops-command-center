@@ -10,6 +10,8 @@ test('real engine telemetry, all modules, and Shadow DOM isolation', async ({ pa
   const data = await (await request.get('/api/snapshot')).json();
   await expect(page.locator('.metric').first()).toContainText(data.scan.checked.toLocaleString());
   await expect(page.getByRole('region', { name: 'Career strategy' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Jarvis bridge' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Jarvis bridge' })).toContainText('READ-ONLY');
   await expect(page.locator('.strategy-panel .section-label').nth(1)).toContainText('PROOF BEFORE POLISH');
   await expect(page.locator('tbody tr')).toHaveCount(Math.min(8, data.funnel.Discovered));
   for (const name of ['Applications', 'Projects', 'Skills & credentials', 'Sources', 'Activity', 'My documents', 'Guide']) {

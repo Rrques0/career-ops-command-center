@@ -7,6 +7,7 @@ import sys
 import subprocess
 import os
 import threading
+from datetime import datetime
 from dataclasses import asdict
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
@@ -72,6 +73,45 @@ def case_studies():
 def learning_paths():
     value = yaml.safe_load(read(ROOT / 'data/learning-paths.yml')) or []
     return value if isinstance(value, list) else []
+
+def jarvis_snapshot():
+    """Read a small, explicit War Room projection; never crawl or mutate a vault."""
+    home = Path.home()
+    configured = os.environ.get('CAREER_OPS_JARVIS_ROOT', '').strip()
+    roots = [Path(configured)] if configured else []
+    roots.extend([
+        home / 'OneDrive' / 'Documents' / 'ChatGPT' / 'Fresh JArvis',
+        home / 'AppData' / 'Roaming' / 'super-war-room' / 'war-room',
+    ])
+    seen = set()
+    for root in roots:
+        try: root = root.expanduser().resolve()
+        except OSError: continue
+        if str(root).lower() in seen: continue
+        seen.add(str(root).lower())
+        candidates = [root / 'state.json', root / 'war-room' / 'state.json']
+        state_path = next((path for path in candidates if path.is_file()), None)
+        if not state_path: continue
+        try: state = yaml.safe_load(read(state_path)) or {}
+        except Exception: state = {}
+        if not isinstance(state, dict): state = {}
+        tasks = state.get('tasks', []) if isinstance(state.get('tasks'), list) else []
+        active = [task for task in tasks if isinstance(task, dict) and not task.get('done')]
+        active.sort(key=lambda task: (
+            float(task.get('impact', 0) or 0) * float(task.get('evidence', 0) or 0) * float(task.get('urgency', 0) or 0)
+            / max(float(task.get('effort', 1) or 1), 1)), reverse=True)
+        stat = state_path.stat()
+        return {'status': 'Live', 'source': 'Fresh JArvis / Super War Room', 'root': str(root),
+            'statePath': str(state_path), 'lastIndexed': datetime.fromtimestamp(stat.st_mtime).isoformat(),
+            'mission': str(state.get('mission', '')), 'activeProject': str(state.get('activeProject', '')),
+            'nextAction': (active[0].get('title', '') if active else ''),
+            'tasks': [{'id': str(task.get('id', '')), 'title': str(task.get('title', '')), 'done': bool(task.get('done')), 'project': str(task.get('project', ''))} for task in active[:5]],
+            'evidence': [{'date': str(item.get('date', '')), 'observation': str(item.get('observation', '')), 'confidence': str(item.get('confidence', ''))}
+                        for item in (state.get('evidence', []) if isinstance(state.get('evidence'), list) else [])[-5:]],
+            'blockers': [str(item) for item in (state.get('blockers', []) if isinstance(state.get('blockers'), list) else [])[-5:]],
+            'readOnly': True}
+    return {'status': 'Unavailable', 'source': 'No approved local Jarvis state found', 'root': '', 'statePath': '',
+        'lastIndexed': '', 'mission': '', 'activeProject': '', 'nextAction': '', 'tasks': [], 'evidence': [], 'blockers': [], 'readOnly': True}
 
 class Bridge:
     def __init__(self, store):
@@ -149,7 +189,7 @@ class Bridge:
             'scholarships': read(ENGINE / 'data/scholarships.md'),
             'projects': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('projects', []),
             'githubProfile': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('githubProfile', ''),
-            'caseStudies': case_studies(), 'learningPaths': learning_paths()}
+            'caseStudies': case_studies(), 'learningPaths': learning_paths(), 'jarvis': jarvis_snapshot()}
     def job(self, job_id, company, role, location, url, stage, date, notes, number, report, details):
         assessment = native.assess_job({'role': role, 'location': location})
         strategies = []

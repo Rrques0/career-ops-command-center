@@ -14,6 +14,13 @@ export interface LearningPathRecord {
   status: 'planned' | 'in-progress' | 'completed'; goal: string; nextStep: string;
   timebox: string; lane: string; source: string;
 }
+export interface JarvisSnapshot {
+  status: 'Live' | 'Unavailable'; source: string; root: string; statePath: string; lastIndexed: string;
+  mission: string; activeProject: string; nextAction: string;
+  tasks: { id: string; title: string; done: boolean; project: string }[];
+  evidence: { date: string; observation: string; confidence: string }[];
+  blockers: string[]; readOnly: boolean;
+}
 export interface Task { id: string; kind: string; status: string; started: string; finished: string; log: string; summary?: string }
 export interface Snapshot {
   generatedAt: string;
@@ -28,6 +35,7 @@ export interface Snapshot {
   githubProfile?: string; projects: { name: string; kind: string; url: string; description: string; language: string; fork: boolean; updatedAt: string }[];
   caseStudies: { id: string; title: string; lane: string; situation: string; risk: string; action: string; result: string; learned: string }[];
   learningPaths: LearningPathRecord[];
+  jarvis: JarvisSnapshot;
   syncPending: { id: string; error: string }[];
 }
 export async function snapshot(): Promise<Snapshot> {

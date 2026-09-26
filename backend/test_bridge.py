@@ -31,6 +31,8 @@ class BridgeTests(unittest.TestCase):
         self.assertTrue(value['caseStudies'])
         self.assertEqual({path['id'] for path in value['learningPaths']}, {'wgu-cybersecurity', 'oscp-prep', 'ccna-prep', 'rhca-prep', 'sscp-prep'})
         self.assertIn('7 remaining classes', value['learningPaths'][0]['goal'])
+        self.assertIn(value['jarvis']['status'], {'Live', 'Unavailable'})
+        self.assertTrue(value['jarvis']['readOnly'])
         self.assertTrue(all(j.get('lane') and j.get('bridgeLabel') for j in value['jobs']))
 
     def test_stages_and_contacts_survive_reopening_and_audit_cannot_change(self):

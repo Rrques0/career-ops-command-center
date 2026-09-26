@@ -9,6 +9,7 @@ import { useNavigation, usePreference, views } from './services/navigation';
 export type { View } from './services/navigation';
 import { IntelligenceViews } from './components/IntelligenceViews';
 import { CareerStrategy } from './components/CareerStrategy';
+import { JarvisBridge } from './components/JarvisBridge';
 
 export function App() {
   const [data, setData] = useState<Snapshot>();
@@ -66,6 +67,7 @@ export function App() {
       {!!data.syncPending?.length && <div className="notice error" role="alert">{data.syncPending.length} stage updates are saved locally but still need synchronization with the native tracker.<button onClick={async () => { try { await action('sync', {}); await refresh(); } catch (error) { setMessage(String(error)); } }}>Retry synchronization</button></div>}
       <section className="identity"><div><span className="eyebrow">OPERATOR / AK</span><h2>{data.operator.name}</h2><p>{data.operator.headline}</p></div><div className="identity-meta"><b>{data.operator.location}</b>{safeLink(data.operator.linkedin ?? '') && <a href={safeLink(data.operator.linkedin ?? '')} target="_blank" rel="noreferrer">My LinkedIn profile ↗</a>}<button onClick={() => setSharing(true)}>Draft a LinkedIn project post</button><span>WGU Cybersecurity · {data.operator.education.remaining_classes ?? 'Unknown'} classes remaining</span><span>Early-career cyber · infrastructure · GRC · manufacturing IT/OT</span></div></section>
       {view === 'Command' && <CareerStrategy data={data}/>} 
+      {view === 'Command' && <JarvisBridge brain={data.jarvis}/>}
       {view === 'Command' && <>
         <section className="today"><div className="section-label">TODAY<span>03 NEXT ACTIONS</span></div><div className="action-grid"><button disabled={working} onClick={() => void run('autopilot')}><span>01 / RUN MY QUEUE</span><b>Find, rank, and evaluate</b><small>Scans public sources, deduplicates, runs repeatable fit and risk checks, and prepares the highest-priority roles for your review.</small><em>Run my queue →</em></button><button disabled={!reviewed} onClick={() => reviewed && setSelected(reviewed.id)}><span>02 / REVIEW</span><b>{reviewed ? `Review ${reviewed.company}` : 'Review your application pipeline'}</b><small>{reviewed?.role ?? 'Evaluate a role to create an application pack.'}</small><em>Open application pack →</em></button><button onClick={() => setView('Sources')}><span>03 / SOURCE READINESS</span><b>{repairs} sources need attention</b><small>Inspect recorded failures and run source verification.</small><em>Inspect source health →</em></button></div></section>
         <div className="telemetry-grid"><Metric label="LAST SCAN / CHECKED" value={data.scan.checked.toLocaleString()} detail={date(data.scan.timestamp)}/><Metric label="NEWLY SAVED" value={String(data.scan.added)} detail="Added by the latest recorded scan"/><Metric label="FILTERED + DEDUPED" value={(data.scan.filtered + data.scan.duplicates).toLocaleString()} detail="Recorded exclusions from the scanner"/><Metric label="EVALUATION REPORTS" value={String(data.jobs.filter(j => j.report).length)} detail="Existing reports in Career Ops"/></div>
