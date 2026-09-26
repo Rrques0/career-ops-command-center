@@ -47,6 +47,28 @@ def report_path(ref):
     candidate = ((ENGINE / 'data' / ref) if ref.startswith('..') else ENGINE / ref).resolve()
     return candidate if candidate.is_relative_to((ENGINE / 'reports').resolve()) else None
 
+def career_lane(role, rationale='', archetype=''):
+    text = f'{role} {rationale} {archetype}'.lower()
+    if any(token in text for token in ('cmmc', 'nist', 'grc', 'compliance', 'governance', 'risk', 'security analyst')):
+        return 'Cybersecurity / GRC / CMMC'
+    if any(token in text for token in ('manufacturing', 'ot ', ' cnc', 'mes', 'erp', 'plant', 'industrial')):
+        return 'Manufacturing IT/OT'
+    return 'Systems / Infrastructure / IAM'
+
+def bridge_role_label(role, report_score=None):
+    text = role.lower()
+    if any(token in text for token in ('senior', 'lead', 'principal', 'manager', 'director')):
+        return 'Stretch'
+    if report_score is not None and report_score >= 4:
+        return 'Direct target'
+    if any(token in text for token in ('administrator', 'infrastructure', 'iam', 'systems', 'support', 'analyst')):
+        return 'Strong bridge'
+    return 'Review'
+
+def case_studies():
+    value = yaml.safe_load(read(ROOT / 'data/case-studies.yml')) or []
+    return value if isinstance(value, list) else []
+
 class Bridge:
     def __init__(self, store):
         self.store = store
@@ -122,17 +144,22 @@ class Bridge:
             'syncPending': [p for p in projections.values() if p['status'] == 'pending'],
             'scholarships': read(ENGINE / 'data/scholarships.md'),
             'projects': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('projects', []),
-            'githubProfile': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('githubProfile', '')}
+            'githubProfile': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('githubProfile', ''),
+            'caseStudies': case_studies()}
     def job(self, job_id, company, role, location, url, stage, date, notes, number, report, details):
         assessment = native.assess_job({'role': role, 'location': location})
         strategies = []
         if number:
             strategies = list((ENGINE / 'documents/employer-strategies').glob(f'{int(number):03d}-*.md')) if number.isdigit() else []
+        report_score = details.get('score') if isinstance(details.get('score'), (int, float)) else None
+        rationale = assessment.reason
+        lane = career_lane(role, rationale, details.get('archetype', ''))
         return {'id': job_id, 'company': company, 'role': role, 'location': location or 'See posting',
             'url': url, 'stage': stage, 'date': date, 'updatedAt': '', 'notes': notes,
             'trackerNumber': number, 'rank': assessment.priority, 'tier': assessment.tier,
             'triagePercent': max(0, min(100, round((assessment.priority + 5) / 18 * 100))),
-            'rationale': assessment.reason, 'evaluationScore': details.get('score') if isinstance(details.get('score'), (int, float)) else None,
+            'rationale': rationale, 'lane': lane, 'bridgeLabel': bridge_role_label(role, report_score),
+            'evaluationScore': report_score,
             'gaps': [str(g) for g in details.get('soft_gaps', [])] if isinstance(details.get('soft_gaps'), list) else [],
             'strengths': [str(g) for g in details.get('top_strengths', [])] if isinstance(details.get('top_strengths'), list) else [],
             'nextAction': details.get('next_action', ''), 'report': report,

@@ -5,6 +5,7 @@ export interface Opportunity {
   id: string; company: string; role: string; location: string; url: string; stage: Stage;
   date: string; updatedAt: string; notes: string; trackerNumber: string; rank: number;
   tier: 'HIGH' | 'GOOD' | 'REVIEW' | 'STRETCH'; triagePercent: number; rationale: string;
+  lane?: string; bridgeLabel?: string;
   evaluationScore?: number; gaps: string[]; strengths: string[]; nextAction: string;
   report: string; draft: string; events: AuditEvent[];
 }
@@ -20,6 +21,7 @@ export interface Snapshot {
   scanHistory: { timestamp: string; found: string; new_added: string }[];
   funnel: Record<Stage, number>; scholarships: string; tasks: Task[];
   githubProfile?: string; projects: { name: string; kind: string; url: string; description: string; language: string; fork: boolean; updatedAt: string }[];
+  caseStudies: { id: string; title: string; lane: string; situation: string; risk: string; action: string; result: string; learned: string }[];
   syncPending: { id: string; error: string }[];
 }
 export async function snapshot(): Promise<Snapshot> {

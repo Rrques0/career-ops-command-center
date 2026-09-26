@@ -28,6 +28,8 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(len(value['jobs']), sum(value['funnel'].values()))
         self.assertEqual(len({j['id'] for j in value['jobs']}), len(value['jobs']))
         self.assertNotIn('Jordan Lee', json.dumps(value))
+        self.assertTrue(value['caseStudies'])
+        self.assertTrue(all(j.get('lane') and j.get('bridgeLabel') for j in value['jobs']))
 
     def test_stages_and_contacts_survive_reopening_and_audit_cannot_change(self):
         self.store.transition('test', 'Applied', 'Discovered')
