@@ -37,6 +37,11 @@ test('application search, drawer, persistent transitions and contact notes', asy
   await card.getByRole('button').first().click();
   const drawer = page.getByRole('dialog');
   await expect(drawer).toBeVisible();
+    const pack = drawer.locator('.application-pack');
+    await expect(pack).toBeVisible();
+    await expect(pack.locator('.section-label')).toContainText('MINIMUM VIABLE APPLICATION PACK');
+    await pack.getByText('Preview pack', { exact: true }).click();
+    await expect(pack.locator('pre')).toContainText(job.company);
   await drawer.getByLabel('Application stage', { exact: true }).selectOption('Archived');
   await expect(drawer.getByLabel('Application stage', { exact: true })).toHaveValue('Archived');
   await drawer.getByLabel('Actual contact name').fill('TEST RECORD — local test database');

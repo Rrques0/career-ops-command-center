@@ -10,11 +10,15 @@
   `data/case-studies.yml`.
 - Case studies use the reviewable structure Situation -> Risk -> Action -> Result -> What I learned.
   They contain only confirmed responsibilities and avoid invented metrics.
+- The application drawer includes a minimum viable Application Pack review block. It assembles the
+  selected role's lane, bridge label, report-backed fit, gaps, and next action into a copyable
+  review artifact; it never submits, sends, or advances an application.
 
-## Next seam: minimum viable application pack
+## Next seam: deeper generated outputs
 
-The existing evaluation report, Prefill Vault, cover/PDF workflows, and application drawer are the
-adapters for a future one-click pack. That pack should assemble, for a selected role:
+The current pack is intentionally a small, evidence-first review block. The existing evaluation
+report, Prefill Vault, cover/PDF workflows, and application drawer remain the adapters for deeper
+generated outputs. The next increment can add, for a selected role:
 
 1. lane-specific resume emphasis;
 2. three grounded fit bullets and three objections;
