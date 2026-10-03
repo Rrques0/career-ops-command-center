@@ -71,3 +71,11 @@ preserves the last complete view while one rebuild runs, and bounded health
 telemetry makes p50/p95/p99 behavior inspectable. This is deliberately not a new
 persistence engine or a replacement for Career Ops: the native parser and
 canonical tracker retain authority, and irreversible user actions remain manual.
+
+## 2026-10-03 — Put the operating loop before the evidence wall
+
+The command page now leads with four deterministic shortcuts—find, review, prepare,
+and track—followed by a compact product-proof surface built only from current local
+telemetry. Detailed strategy, Jarvis, source, and audit views remain available through
+the same routes. This preserves the human-in-the-loop boundary while making the first
+screen legible to a new operator or an investor reviewing the product in a short demo.
