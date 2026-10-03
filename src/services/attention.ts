@@ -20,7 +20,11 @@ export interface AttentionPlan {
 type AttentionData = Pick<Snapshot, 'jobs' | 'tasks' | 'sources' | 'scan'>;
 
 function byPriority(jobs: Opportunity[]) {
-  return [...jobs].sort((left, right) => right.rank - left.rank || right.triagePercent - left.triagePercent);
+  return [...jobs].sort((left, right) =>
+    (right.attentionScore ?? right.triagePercent) - (left.attentionScore ?? left.triagePercent)
+    || right.rank - left.rank
+    || right.triagePercent - left.triagePercent,
+  );
 }
 
 function evidence(job: Opportunity) {
