@@ -9,6 +9,8 @@ __pycache__/
 !.env.example
 data/*
 !data/public-projects.json
+!data/operator.yml
+!data/professional-evidence.yml
 career-ops/
 test-results/
 playwright-report/

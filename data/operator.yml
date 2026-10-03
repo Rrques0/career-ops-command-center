@@ -1,0 +1,15 @@
+source: "User-confirmed identity and stack, September 5, 2026; certifications and education read from Career Ops cv.md and config/profile.yml."
+portfolio_url: "https://featherweight.up.railway.app/professional"
+headline: "Systems & infrastructure operator securing manufacturing environments across identity, networks, ERP/OT systems, and CMMC/NIST compliance"
+stack:
+  - RHEL / Enterprise Linux
+  - Proxmox VE
+  - Active Directory / Domain Architecture
+  - VLAN segmentation / Nmap / firewalls
+  - JavaScript / TypeScript / Node.js
+  - Python automation
+  - GraphQL / REST ERP integrations
+  - CMMC Level 2 / NIST SP 800-171
+  - Microsoft 365 identity / MFA / least privilege
+  - Ubiquiti / SonicWall / VPN / network segmentation
+  - Manufacturing ERP / CNC / OT systems security

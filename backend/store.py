@@ -23,6 +23,55 @@ class Store:
             CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, kind TEXT, status TEXT, started TEXT, finished TEXT, log TEXT);
             CREATE TABLE IF NOT EXISTS projections (id TEXT PRIMARY KEY, tracker TEXT, stage TEXT, status TEXT, error TEXT);
             CREATE TABLE IF NOT EXISTS sources (company TEXT PRIMARY KEY, status TEXT, detail TEXT, timestamp TEXT, latency REAL);
+            CREATE TABLE IF NOT EXISTS revisions (scope TEXT PRIMARY KEY, revision INTEGER NOT NULL DEFAULT 0, updated TEXT NOT NULL DEFAULT '');
+            INSERT OR IGNORE INTO revisions(scope, revision, updated) VALUES('career', 0, '');
+            INSERT OR IGNORE INTO revisions(scope, revision, updated) VALUES('tasks', 0, '');
+
+            CREATE TRIGGER IF NOT EXISTS revision_states_insert AFTER INSERT ON states BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_states_update AFTER UPDATE ON states BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_states_delete AFTER DELETE ON states BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_events_insert AFTER INSERT ON events BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_events_update AFTER UPDATE ON events BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_events_delete AFTER DELETE ON events BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_projections_insert AFTER INSERT ON projections BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_projections_update AFTER UPDATE ON projections BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_projections_delete AFTER DELETE ON projections BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_sources_insert AFTER INSERT ON sources BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_sources_update AFTER UPDATE ON sources BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_sources_delete AFTER DELETE ON sources BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='career';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_tasks_insert AFTER INSERT ON tasks BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='tasks';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_tasks_update AFTER UPDATE ON tasks BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='tasks';
+            END;
+            CREATE TRIGGER IF NOT EXISTS revision_tasks_delete AFTER DELETE ON tasks BEGIN
+                UPDATE revisions SET revision=revision+1, updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE scope='tasks';
+            END;
             ''')
     @contextmanager
     def connect(self):
@@ -36,6 +85,12 @@ class Store:
     def states(self):
         with self.connect() as db:
             return {r['id']: dict(r) for r in db.execute('SELECT * FROM states')}
+    def revisions(self):
+        """Read local write revisions atomically for the snapshot read model."""
+        with self.connect() as db:
+            values = {row['scope']: int(row['revision']) for row in db.execute(
+                'SELECT scope, revision FROM revisions WHERE scope IN (?, ?)', ('career', 'tasks'))}
+        return {'career': values.get('career', 0), 'tasks': values.get('tasks', 0)}
     def transition(self, job_id, stage, previous, tracker=''):
         if stage not in STAGES:
             raise ValueError('Invalid application stage')

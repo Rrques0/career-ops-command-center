@@ -181,6 +181,27 @@ test('one next action evaluates the top discovered role and keeps its pack works
   expect(writes).toEqual(['/api/tasks']);
 });
 
+test('attention allocation labels verified records and stale local data honestly', async ({ page, request }) => {
+  const base = await (await request.get('/api/snapshot')).json();
+  const job = fixtureJob(base.jobs[0], {});
+  const fixture = {
+    ...base, jobs: [job], tasks: [], funnel: { ...emptyFunnel, Discovered: 1 }, sources: [],
+    performance: {
+      status: 'stale', snapshotRevision: 77, lastSuccessfulSnapshotAt: '2026-09-26T00:00:00Z',
+      telemetry: { cacheHits: 8, staleServes: 1, rebuilds: 2, parserRebuilds: 2, fingerprintMs: { p50: 1, p95: 2, p99: 2 }, rebuildMs: { p50: 90, p95: 120, p99: 120 } },
+    },
+  };
+  await page.route('**/api/snapshot', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(fixture) }));
+  await page.reload();
+  const allocator = page.locator('.attention-allocator');
+  await expect(allocator).toContainText('VERIFIED LOCAL RECORDS');
+  await expect(allocator).toContainText('Fixture Fabrication');
+  await expect(allocator).toContainText('99% triage');
+  await expect(allocator).toContainText('Portfolio coverage: 100% · not evaluated');
+  await expect(page.getByText('Refreshing local records. You are viewing the last complete, verified snapshot.')).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'SNAPSHOT STALE' })).toBeVisible();
+});
+
 test('one next action opens the best evaluated pack without starting a task', async ({ page, request }) => {
   const base = await (await request.get('/api/snapshot')).json();
   const job = fixtureJob(base.jobs[0], { stage: 'Evaluated', report: 'Grounded evaluation fixture.', evaluationScore: 5 });

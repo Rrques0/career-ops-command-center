@@ -8,12 +8,12 @@ A local-first career operations interface by **Archis Khanal**: React + TypeScri
 
 - Searchable application list and lifecycle board backed by the same records.
 - Ctrl/Cmd+K navigation, persistent display filters, stage shortcuts and focus mode.
-- Python rule-based opportunity triage with explicit scoring explanations.
+- Python rule-based opportunity triage with explicit scoring explanations and a source-annotated portfolio-evidence signal.
 - Source-health and scan telemetry read from engine output, not demo counters.
 - SQLite stage history, contact notes, durable tracker-sync retries and workflow logs.
 - Draft-only employer research and LinkedIn project-sharing tools. Nothing is automatically sent or submitted.
 
-This is a personal engineering project, not an enterprise-certified product. Priority scores are heuristics, not applicant-pool percentiles. AI workflows require separately configured CLI access and available usage.
+This is a personal engineering project, not an enterprise-certified product. Attention scores combine 60% native title/location triage with 40% evidence coverage from the linked professional portfolio; they are workflow ordering heuristics, not applicant-pool percentiles, skills-match claims, or hiring probabilities. AI workflows require separately configured CLI access and available usage.
 
 ## Architecture
 
@@ -50,6 +50,6 @@ The current integration/browser tests were validated against the author's privat
 
 ## Privacy
 
-No resume PDFs, contact details, private profile YAML, application records, reports, logs, credentials or database files are included. The engine checkout and runtime data are ignored. Browser storage holds display preferences only. Review all files before publishing any future updates.
+No resume PDFs, contact details, application records, reports, logs, credentials or database files are included. `data/operator.yml` and `data/professional-evidence.yml` contain only the public, user-directed profile and portfolio evidence used by the local ranking calculus. The engine checkout and runtime data are ignored. Browser storage holds display preferences only. Review all files before publishing any future updates.
 
 See ARCHITECTURE.md and RESEARCH-UX.md for implementation details and cited design references.

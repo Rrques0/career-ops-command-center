@@ -11,7 +11,8 @@ export type NextAction =
 type NextActionState = Pick<Snapshot, 'jobs' | 'tasks'>;
 
 function byPriority(jobs: Opportunity[]) {
-  return [...jobs].sort((left, right) => right.rank - left.rank || right.triagePercent - left.triagePercent);
+  return [...jobs].sort((left, right) => (right.attentionScore ?? right.triagePercent) - (left.attentionScore ?? left.triagePercent)
+    || right.rank - left.rank || right.triagePercent - left.triagePercent);
 }
 
 // One shallow, deterministic decision layer: the UI does not duplicate Career Ops ranking.

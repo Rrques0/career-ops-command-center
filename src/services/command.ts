@@ -5,6 +5,8 @@ export interface Opportunity {
   id: string; company: string; role: string; location: string; url: string; stage: Stage;
   date: string; updatedAt: string; notes: string; trackerNumber: string; rank: number;
   tier: 'HIGH' | 'GOOD' | 'REVIEW' | 'STRETCH'; triagePercent: number; rationale: string;
+  attentionScore?: number; evidenceScore?: number; evidenceBand?: 'direct' | 'adjacent' | 'gap' | 'unmapped';
+  evidenceRationale?: string; evidenceProofPoints?: string[];
   lane?: string; bridgeLabel?: string;
   evaluationScore?: number; gaps: string[]; strengths: string[]; nextAction: string;
   report: string; draft: string; events: AuditEvent[];
@@ -22,9 +24,18 @@ export interface JarvisSnapshot {
   blockers: string[]; readOnly: boolean;
 }
 export interface Task { id: string; kind: string; status: string; started: string; finished: string; log: string; summary?: string }
+export interface SnapshotPerformance {
+  status: 'healthy' | 'stale' | 'degraded'; snapshotRevision: number;
+  lastSuccessfulSnapshotAt: string;
+  telemetry: {
+    cacheHits: number; staleServes: number; rebuilds: number; parserRebuilds: number;
+    fingerprintMs: { p50: number; p95: number; p99: number };
+    rebuildMs: { p50: number; p95: number; p99: number };
+  };
+}
 export interface Snapshot {
   generatedAt: string;
-  operator: { name: string; headline: string; location: string; linkedin?: string; targets: string[]; skills: string;
+  operator: { name: string; headline: string; location: string; linkedin?: string; portfolio?: string; targets: string[]; skills: string;
     certifications: string; confirmedStack: string[]; provenance: string; resume: string;
     education: { institution?: string; program?: string; remaining_classes?: number; grading?: string; graduation_date?: string } };
   jobs: Opportunity[];
@@ -37,12 +48,15 @@ export interface Snapshot {
   learningPaths: LearningPathRecord[];
   jarvis: JarvisSnapshot;
   syncPending: { id: string; error: string }[];
+  professionalEvidence?: { source: string; capturedAt: string; provenance: string; calculus: { description?: string; weights?: { triage?: number; portfolio_evidence?: number } } };
+  performance?: SnapshotPerformance;
 }
 let cachedSnapshot: Snapshot | undefined;
 let cachedEtag = '';
-export async function snapshot(): Promise<Snapshot> {
+export async function snapshot(options: { requireFresh?: boolean } = {}): Promise<Snapshot> {
   const headers = cachedEtag ? { 'If-None-Match': cachedEtag } : undefined;
-  const response = await fetch('/api/snapshot', { cache: 'no-store', headers, signal: AbortSignal.timeout(15000) });
+  const endpoint = options.requireFresh ? '/api/snapshot?fresh=1' : '/api/snapshot';
+  const response = await fetch(endpoint, { cache: 'no-store', headers, signal: AbortSignal.timeout(15000) });
   if (response.status === 304 && cachedSnapshot) return cachedSnapshot;
   if (!response.ok) throw new Error('The local Python engine is unavailable. Reopen the Desktop shortcut.');
   const value = await response.json();

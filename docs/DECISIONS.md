@@ -46,3 +46,28 @@ queue. Starting an evaluation keeps that role's drawer open rather than routing 
 and requiring a second search for the result. The module owns no persistence or ranking rules, and
 it cannot apply, send outreach, or change an application stage; those boundaries remain with the user
 and the native Career Ops tracker.
+
+## 2026-10-03 — Use the professional portfolio as an evidence signal, not a promise
+
+The user-directed professional portfolio is now captured as a source-annotated
+profile evidence catalog. Its concrete scope signals (manufacturing ownership,
+CMMC/NIST readiness, internal applications, identity/network operations, and
+reporting cadence) contribute 40% of a transparent attention signal; the native
+title/location triage contributes 60%. This signal only orders the user's review
+queue. It is explicitly not a hiring probability, applicant percentile, salary
+claim, or substitute for reviewing the posting and report. The source URL and
+qualification note travel with the evidence so application material still
+requires human review.
+
+## 2026-09-26 — Make local snapshots atomic, incremental, and observable
+
+The command center now concentrates snapshot coherence at one read-model seam.
+Career data, task activity, and the read-only Jarvis projection are independently
+fingerprinted and cached, then composed into an immutable revision. SQLite
+revision triggers provide immediate invalidation for local writes; exact
+content-hashes cover the native tracker, reports, drafts, profile, and approved
+root records that can change outside the web UI. A stale-while-revalidate path
+preserves the last complete view while one rebuild runs, and bounded health
+telemetry makes p50/p95/p99 behavior inspectable. This is deliberately not a new
+persistence engine or a replacement for Career Ops: the native parser and
+canonical tracker retain authority, and irreversible user actions remain manual.

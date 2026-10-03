@@ -1,0 +1,40 @@
+source: https://featherweight.up.railway.app/professional
+captured_at: '2026-10-03'
+provenance: User-directed professional portfolio URL; use as a fit signal and review before reusing claims in application materials.
+calculus:
+  description: Evidence coverage is a transparent profile-to-role signal, not a candidate percentile or hiring probability.
+  weights:
+    triage: 0.6
+    portfolio_evidence: 0.4
+evidence:
+  - id: manufacturing-ownership
+    label: Production IT ownership
+    summary: Sole in-house IT resource supporting a 50-person aerospace and defense manufacturer.
+    lanes: [Manufacturing IT/OT, Systems / Infrastructure / IAM]
+    keywords: [manufacturing, production, plant, aerospace, defense, it/ot, operational technology]
+  - id: cmmc-readiness
+    label: CMMC and NIST readiness
+    summary: Technical implementation and evidence documentation aligned to NIST SP 800-171 and CMMC Level 2 readiness across 110 requirements.
+    lanes: [Cybersecurity / GRC / CMMC]
+    keywords: [cmmc, nist, 800-171, compliance, governance, grc, security readiness, intelligr]
+    qualification: Readiness and implementation work; not a claim of CMMC certification.
+  - id: internal-applications
+    label: Internal applications and automation
+    summary: Eleven internal applications spanning reporting, employee information, integrations, and security awareness.
+    lanes: [Systems / Infrastructure / IAM, Manufacturing IT/OT]
+    keywords: [python, fastapi, graphql, api, automation, application, applications, integration, developer, software]
+  - id: identity-network
+    label: Identity, network, and remote access
+    summary: Active Directory, Microsoft 365, SonicWall, Ubiquiti, VPN/MFA, segmentation, and production troubleshooting.
+    lanes: [Systems / Infrastructure / IAM, Cybersecurity / GRC / CMMC]
+    keywords: [active directory, microsoft 365, m365, identity, iam, network, networking, sonicwall, ubiquiti, vpn, mfa, firewall, segmentation]
+  - id: manufacturing-integrations
+    label: Manufacturing systems integration
+    summary: ERP, accounting reporting, engineering workstations, metrology, CNC/OT, ZEISS, FASTEMS, and Matsuura support.
+    lanes: [Manufacturing IT/OT]
+    keywords: [erp, proshop, quickbooks, cnc, ot, metrology, zeiss, fastems, matsuura, cad, cam]
+  - id: operational-reporting
+    label: Operational reporting cadence
+    summary: Thirty-seven consecutive weekly reports across eight IT, OT, and compliance workstreams over ten months.
+    lanes: [Cybersecurity / GRC / CMMC, Systems / Infrastructure / IAM, Manufacturing IT/OT]
+    keywords: [reporting, documentation, evidence, assessor, audit, metrics, workstreams]

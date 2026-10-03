@@ -13,6 +13,7 @@ from importlib.machinery import SourceFileLoader
 from pathlib import Path
 import yaml
 from .store import Store, STAGES, now
+from .professional_fit import evidence_catalog, professional_fit
 
 ROOT = Path(__file__).resolve().parents[1]
 ENGINE = ROOT / 'career-ops'
@@ -74,8 +75,13 @@ def learning_paths():
     value = yaml.safe_load(read(ROOT / 'data/learning-paths.yml')) or []
     return value if isinstance(value, list) else []
 
-def jarvis_snapshot():
-    """Read a small, explicit War Room projection; never crawl or mutate a vault."""
+def jarvis_roots():
+    """Return the small, approved set of read-only Jarvis roots.
+
+    Keeping the discovery rule here lets the HTTP read model fingerprint exactly
+    the same state files that this bridge can project.  It deliberately does
+    not crawl an Obsidian vault or follow arbitrary links from a state file.
+    """
     home = Path.home()
     configured = os.environ.get('CAREER_OPS_JARVIS_ROOT', '').strip()
     roots = [Path(configured)] if configured else []
@@ -84,11 +90,23 @@ def jarvis_snapshot():
         home / 'AppData' / 'Roaming' / 'super-war-room' / 'war-room',
     ])
     seen = set()
+    approved = []
     for root in roots:
         try: root = root.expanduser().resolve()
         except OSError: continue
         if str(root).lower() in seen: continue
         seen.add(str(root).lower())
+        approved.append(root)
+    return tuple(approved)
+
+def jarvis_state_candidates():
+    """Return every approved state path that may influence the projection."""
+    return tuple(candidate for root in jarvis_roots()
+                 for candidate in (root / 'state.json', root / 'war-room' / 'state.json'))
+
+def jarvis_snapshot():
+    """Read a small, explicit War Room projection; never crawl or mutate a vault."""
+    for root in jarvis_roots():
         candidates = [root / 'state.json', root / 'war-room' / 'state.json']
         state_path = next((path for path in candidates if path.is_file()), None)
         if not state_path: continue
@@ -144,7 +162,7 @@ class Bridge:
                 except OSError: pass
         digest = hashlib.sha256('\n'.join(sorted(parts)).encode()).hexdigest()[:20]
         return f'"{digest}"'
-    def snapshot(self):
+    def snapshot(self, include_jarvis=True):
         pending = native.parse_pipeline()
         applications = native.parse_applications()
         intel = native.build_snapshot(ENGINE, pending, applications)
@@ -201,10 +219,12 @@ class Bridge:
                     'detail': row['detail'], 'timestamp': row['timestamp'], 'latencyMs': row['latency']}
         sources = sorted(source_map.values(), key=lambda r: (r['status'] == 'Live', r['company']))
         history = rows(ENGINE / 'data/scan-runs.tsv')[-12:]
+        catalog = evidence_catalog()
         return {'generatedAt': now(), 'operator': {'name': profile.get('candidate', {}).get('full_name', 'Profile unavailable'),
             'headline': confirmed.get('headline', profile.get('narrative', {}).get('headline', '')),
             'location': profile.get('candidate', {}).get('location', ''),
             'linkedin': safe_url('https://' + str(profile.get('candidate', {}).get('linkedin', '')).removeprefix('https://').removeprefix('http://')),
+            'portfolio': safe_url(str(confirmed.get('portfolio_url', ''))),
             'targets': profile.get('target_roles', {}).get('primary', []),
             'education': profile.get('education_context', {}),
             'skills': section(cv, 'Core Skills'), 'certifications': section(cv, 'Certifications'),
@@ -216,7 +236,10 @@ class Bridge:
             'scholarships': read(ENGINE / 'data/scholarships.md'),
             'projects': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('projects', []),
             'githubProfile': (yaml.safe_load(read(ROOT / 'data/public-projects.json')) or {}).get('githubProfile', ''),
-            'caseStudies': case_studies(), 'learningPaths': learning_paths(), 'jarvis': jarvis_snapshot()}
+            'caseStudies': case_studies(), 'learningPaths': learning_paths(),
+            'professionalEvidence': {'source': catalog.get('source', ''), 'capturedAt': catalog.get('captured_at', ''),
+                                     'provenance': catalog.get('provenance', ''), 'calculus': catalog.get('calculus', {})},
+            **({'jarvis': jarvis_snapshot()} if include_jarvis else {})}
     def job(self, job_id, company, role, location, url, stage, date, notes, number, report, details):
         assessment = native.assess_job({'role': role, 'location': location})
         strategies = []
@@ -225,11 +248,16 @@ class Bridge:
         report_score = details.get('score') if isinstance(details.get('score'), (int, float)) else None
         rationale = assessment.reason
         lane = career_lane(role, rationale, details.get('archetype', ''))
+        evidence = professional_fit(role, lane)
+        triage_percent = max(0, min(100, round((assessment.priority + 5) / 18 * 100)))
+        attention_score = round(triage_percent * evidence['triageWeight'] + evidence['score'] * evidence['evidenceWeight'])
         return {'id': job_id, 'company': company, 'role': role, 'location': location or 'See posting',
             'url': url, 'stage': stage, 'date': date, 'updatedAt': '', 'notes': notes,
             'trackerNumber': number, 'rank': assessment.priority, 'tier': assessment.tier,
-            'triagePercent': max(0, min(100, round((assessment.priority + 5) / 18 * 100))),
+            'triagePercent': triage_percent, 'attentionScore': attention_score,
             'rationale': rationale, 'lane': lane, 'bridgeLabel': bridge_role_label(role, report_score),
+            'evidenceScore': evidence['score'], 'evidenceBand': evidence['band'],
+            'evidenceRationale': evidence['rationale'], 'evidenceProofPoints': evidence['proofPoints'],
             'evaluationScore': report_score,
             'gaps': [str(g) for g in details.get('soft_gaps', [])] if isinstance(details.get('soft_gaps'), list) else [],
             'strengths': [str(g) for g in details.get('top_strengths', [])] if isinstance(details.get('top_strengths'), list) else [],
