@@ -93,6 +93,20 @@ test('captures command console for visual inspection', async ({ page }) => {
   await page.screenshot({ path: 'test-results/command-center.png', fullPage: true });
 });
 
+test('command cockpit shortcuts and product proof reduce navigation work', async ({ page }) => {
+  const strip = page.getByRole('region', { name: 'Core workflow shortcuts' });
+  await expect(strip).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Product proof' })).toContainText('A career system with an operating rhythm.');
+  await strip.getByRole('button', { name: /Review queue/ }).click();
+  await expect(page).toHaveURL(/#Applications$/);
+  await expect(page.getByLabel('Stage', { exact: true })).toHaveValue('Discovered');
+  await page.getByRole('navigation').getByRole('button', { name: 'Command', exact: true }).click();
+  await page.keyboard.press('/');
+  await expect(page.getByRole('dialog', { name: 'Quick navigation' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Quick navigation' })).toHaveCount(0);
+});
+
 test('LinkedIn project draft is editable and stays draft-only', async ({ page }) => {
   await page.getByRole('button', { name: 'Draft a LinkedIn project post' }).click();
   const dialog = page.getByRole('dialog', { name: 'LinkedIn draft' });

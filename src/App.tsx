@@ -13,6 +13,8 @@ import { JarvisBridge } from './components/JarvisBridge';
 import { nextSafeAction } from './services/nextAction';
 import { attentionPlan } from './services/attention';
 import { AttentionAllocator } from './components/AttentionAllocator';
+import { CommandStrip } from './components/CommandStrip';
+import { InvestorProof } from './components/InvestorProof';
 
 export function App() {
   const [data, setData] = useState<Snapshot>();
@@ -26,7 +28,13 @@ export function App() {
   const [pendingJobId, setPendingJobId] = useState('');
   const refreshInFlight = useRef<{ promise: Promise<void>; requireFresh: boolean } | undefined>(undefined);
   useEffect(() => {
-    const handler = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setQuick(value => !value); } };
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing = !!target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setQuick(value => !value); }
+      else if (event.key === '/' && !typing) { event.preventDefault(); setQuick(true); }
+      else if (event.key === 'Escape') { setQuick(false); setSelected(''); }
+    };
     window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler);
   }, []);
   const [selected, setSelected] = useState('');
@@ -81,10 +89,14 @@ export function App() {
   const working = busy || !!offline || !!data?.tasks.some(t => t.status === 'running');
   const job = data?.jobs.find(j => j.id === selected);
   const matches = data?.jobs.filter(j => j.stage === 'Discovered').slice(0, 8) ?? [];
+  const topDiscovered = data?.jobs.filter(j => j.stage === 'Discovered').sort((left, right) => (right.attentionScore ?? right.triagePercent) - (left.attentionScore ?? left.triagePercent))[0];
   const next = data ? nextSafeAction(data) : undefined;
   const attention = data ? attentionPlan(data) : undefined;
   const nextDisabled = busy || !!offline;
   function prepare(job: Opportunity) { setSelected(job.id); void run('evaluate', job.id, { preserveSelection: true }); }
+  function openApplications(filter: string) { setStage(filter); setView('Applications'); }
+  function prepareTopRole() { if (topDiscovered) prepare(topDiscovered); else openApplications('All'); }
+  function showProof() { document.getElementById('investor-proof')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   function doNextAction() {
     if (!next || nextDisabled) return;
     if (next.kind === 'review' || next.kind === 'lifecycle') setSelected(next.job.id);
@@ -102,10 +114,12 @@ export function App() {
     {!offline && data?.performance?.status === 'degraded' && <div className="notice error" role="status">The latest local refresh needs repair. Your last complete, verified snapshot is still available.</div>}
     {message && <div className="notice" role="status">{message}<button onClick={() => setMessage('')}>Dismiss</button></div>}
     {!data ? <section className="panel"><h2>{offline ? 'Start the local engine' : 'Reading your Career Ops files…'}</h2><p>Open My Career Hub from your Desktop. The launcher starts the Python engine and web interface together.</p></section> : <>
-      {view === 'Command' && <GlacialHero data={data} action={nextControl!} explore={() => { setStage('Discovered'); setView('Applications'); }}/>}
+      {view === 'Command' && <GlacialHero data={data} action={nextControl!} explore={() => openApplications('Discovered')}/>}
       {!!data.syncPending?.length && <div className="notice error" role="alert">{data.syncPending.length} stage updates are saved locally but still need synchronization with the native tracker.<button onClick={async () => { try { await action('sync', {}); await refresh(true); } catch (error) { setMessage(String(error)); } }}>Retry synchronization</button></div>}
+      {view === 'Command' && <CommandStrip data={data} onFind={() => void run('autopilot')} onReview={() => openApplications('Discovered')} onPrepare={prepareTopRole} onTrack={() => openApplications('Applied')} onShowProof={showProof}/>} 
       {view === 'Command' && attention && <AttentionAllocator plan={attention} disabled={nextDisabled} onNext={doNextAction} onOpenJob={job => setSelected(job.id)} onOpenSources={() => setView('Sources')} onQueue={() => void run('autopilot')}/>} 
       <section className="identity"><div><span className="eyebrow">OPERATOR / AK</span><h2>{data.operator.name}</h2><p>{data.operator.headline}</p></div><div className="identity-meta"><b>{data.operator.location}</b>{safeLink(data.operator.linkedin ?? '') && <a href={safeLink(data.operator.linkedin ?? '')} target="_blank" rel="noreferrer">My LinkedIn profile ↗</a>}{safeLink(data.operator.portfolio ?? '') && <a href={safeLink(data.operator.portfolio ?? '')} target="_blank" rel="noreferrer">Professional evidence ↗</a>}<button onClick={() => setSharing(true)}>Draft a LinkedIn project post</button><span>WGU Cybersecurity · {data.operator.education.remaining_classes ?? 'Unknown'} classes remaining</span><span>Early-career cyber · infrastructure · GRC · manufacturing IT/OT</span></div></section>
+      {view === 'Command' && <InvestorProof data={data} onOpenProjects={() => setView('Projects')}/>} 
       {view === 'Command' && <CareerStrategy data={data}/>} 
       {view === 'Command' && <JarvisBridge brain={data.jarvis}/>}
       {view === 'Command' && <>
